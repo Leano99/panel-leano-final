@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg: #0A0D14;
+  --panel: #131826;
+  --panel-2: #171E2E;
+  --line: #232B3D;
+  --text: #EDEFF5;
+  --muted: #8792A8;
+  --gold: #F2B807;    /* gift */
+  --cyan: #34D6C4;    /* follow */
+  --magenta: #F23D6D; /* like */
+  --violet: #8B6BF2;  /* comment / TTS */
+  --radius: 10px;
+}
+
+*{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; }
+
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono{ font-family: 'JetBrains Mono', monospace; }
+.display{ font-family: 'Space Grotesk', sans-serif; }
+
+::selection{ background: var(--violet); color: #fff; }
+
+a{ color: inherit; }
+
+/* scrollbar, kept quiet */
+::-webkit-scrollbar{ width: 8px; height: 8px; }
+::-webkit-scrollbar-track{ background: transparent; }
+::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 8px; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}

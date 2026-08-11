@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panel Kontrol Leano</title>
+<link rel="stylesheet" href="style.css" />
+<style>
+  body{ padding: 0; }
+  .shell{ max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* ---- header / signature element ---- */
+  header.deck{
+    display:flex; align-items:center; justify-content:space-between;
+    border:1px solid var(--line); border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    padding: 16px 20px; margin-bottom: 22px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .brand .name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; letter-spacing: 0.2px; }
+  .brand .sub{ color: var(--muted); font-size: 12px; margin-top:2px; }
+  .status{ display:flex; align-items:center; gap:8px; }
+  .dot{ width:9px; height:9px; border-radius:50%; background: var(--magenta); box-shadow: 0 0 0 0 rgba(242,61,109,.6); animation: pulse 1.8s infinite; }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(242,61,109,.55); }
+    70%{ box-shadow: 0 0 0 9px rgba(242,61,109,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(242,61,109,0); }
+  }
+  .status span{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.5px; color: var(--muted); }
+  .bars{ display:flex; gap:3px; align-items:flex-end; height:16px; margin-left: 14px; }
+  .bars i{ width:3px; background: var(--cyan); border-radius: 2px; animation: bar 1.1s ease-in-out infinite; }
+  .bars i:nth-child(2){ animation-delay:.15s; background: var(--violet); }
+  .bars i:nth-child(3){ animation-delay:.3s; background: var(--gold); }
+  .bars i:nth-child(4){ animation-delay:.45s; background: var(--magenta); }
+  @keyframes bar{ 0%,100%{ height:4px; } 50%{ height:16px; } }
+
+  .url-box{ display:flex; align-items:center; gap:8px; }
+  .url-box code{ font-family:'JetBrains Mono',monospace; font-size:12px; color: var(--muted); background:#0000004d; padding:6px 10px; border-radius:6px; border:1px solid var(--line); }
+  .btn{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+    border:1px solid var(--line); background: var(--panel-2); color: var(--text);
+    padding:8px 14px; border-radius:7px; transition: border-color .15s, transform .1s;
+  }
+  .btn:hover{ border-color:#3a4560; }
+  .btn:active{ transform: scale(.97); }
+
+  /* ---- tabs ---- */
+  nav.tabs{ display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--line); }
+  nav.tabs button{
+    background:none; border:none; color: var(--muted); font-family:'Space Grotesk',sans-serif;
+    font-size:14px; font-weight:600; padding:10px 4px; margin-right:22px; cursor:pointer;
+    border-bottom: 2px solid transparent; letter-spacing:.2px;
+  }
+  nav.tabs button.active{ color: var(--text); border-color: var(--violet); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:12px; }
+
+  /* channel-strip style alert buttons */
+  .strip{
+    position:relative; border:1px solid var(--line); border-radius: var(--radius);
+    background: var(--panel); padding:16px; cursor:pointer; text-align:left;
+    transition: transform .12s, border-color .15s;
+  }
+  .strip:hover{ transform: translateY(-2px); border-color: var(--accent, var(--violet)); }
+  .strip:active{ transform: translateY(0); }
+  .strip .tag{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:1.5px; color: var(--accent); text-transform:uppercase; }
+  .strip .title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; margin-top:6px; }
+  .strip .desc{ color: var(--muted); font-size:12px; margin-top:4px; }
+  .strip::before{
+    content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:2px;
+    background: var(--accent);
+  }
+  .strip{ padding-left:20px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; color: var(--muted); margin-bottom:6px; font-family:'JetBrains Mono',monospace; letter-spacing:.5px; }
+  .field input[type=text], .field textarea, .field select{
+    width:100%; background: var(--panel); border:1px solid var(--line); border-radius:8px;
+    color: var(--text); font-family:'Inter',sans-serif; font-size:14px; padding:10px 12px;
+  }
+  .field textarea{ min-height: 80px; resize: vertical; }
+
+  .row{ display:flex; gap:10px; align-items:center; }
+  .hint{ color: var(--muted); font-size:12px; margin-top:10px; line-height:1.6; }
+
+  .log{
+    margin-top:22px; border:1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+    padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:12px; color: var(--muted);
+    max-height:150px; overflow-y:auto;
+  }
+  .log div{ padding:3px 0; border-bottom:1px dashed #1c2334; }
+  .log div:last-child{ border-bottom:none; }
+
+  .preview-wrap{
+    border:1px solid var(--line); border-radius:12px; overflow:hidden;
+    background:
+      linear-gradient(45deg,#151a27 25%,transparent 25%) 0 0/22px 22px,
+      linear-gradient(-45deg,#151a27 25%,transparent 25%) 0 0/22px 22px,
+      linear-gradient(45deg,transparent 75%,#151a27 75%) 0 0/22px 22px,
+      linear-gradient(-45deg,transparent 75%,#151a27 75%) 0 0/22px 22px,
+      #101522;
+  }
+  .preview-toolbar{ display:flex; gap:10px; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; }
+  .preview-frame{ width:100%; aspect-ratio:16/9; border:0; display:block; }
+  .theme-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .theme-card{
+    border:1px solid var(--line); border-radius:10px; padding:12px; background:var(--panel);
+    cursor:pointer; color:var(--text); text-align:left;
+  }
+  .theme-card.active{ border-color:var(--violet); box-shadow:0 0 0 1px var(--violet); }
+  .theme-swatch{ height:48px; border-radius:7px; margin-bottom:8px; border:1px solid #ffffff20; }
+  .chat-demo{height:48px;border-radius:8px;margin-bottom:8px;border:1px solid #ffffff20;background:#101522;display:flex;align-items:center;gap:7px;padding:7px 9px;font-size:10px;overflow:hidden;position:relative;}
+  .chat-demo span{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#20283a;color:#8b6bf2;font-size:8px;font-weight:700;flex:0 0 auto;}
+  .chat-demo b{color:#9a83ff;font-size:9px;white-space:nowrap}.chat-demo small{color:#d7dbea;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pill-demo{border-radius:999px}.pill-demo div,.speech-demo div,.stacked-demo div,.neon-demo div,.compact-demo div{display:flex;align-items:baseline;gap:5px;min-width:0;}
+  .speech-demo{border-radius:16px}.speech-demo:after{content:"";position:absolute;left:18px;bottom:-5px;width:10px;height:10px;background:#101522;transform:rotate(45deg);border-right:1px solid #ffffff20;border-bottom:1px solid #ffffff20;}
+  .stacked-demo{border-left:3px solid #8b6bf2;border-radius:6px}.stacked-demo div{display:block}.stacked-demo b{display:inline-block;background:#27213e;padding:2px 4px;border-radius:4px;margin-bottom:2px;}
+  .neon-demo{border:0;border-left:3px solid #34d6c4;box-shadow:0 0 10px #8b6bf240}.neon-demo div{display:block}.neon-demo b{color:#34d6c4;text-transform:uppercase;font-size:8px}.compact-demo{padding:5px 7px;border-radius:6px}.compact-demo span{width:18px;height:18px;font-size:7px}.compact-demo div{display:block}.compact-demo b{font-size:8px}.compact-demo small{font-size:8px;}
+  .voice-status{ font-size:11px; color:var(--muted); margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="deck">
+    <div class="brand">
+      <div>
+        <div class="name">PANEL LEANO STUDIO</div>
+        <div class="sub">Live Control Center — events, overlays, TTS, simulator &amp; analytics</div>
+      </div>
+      <div class="bars"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="status">
+      <div class="dot"></div>
+      <span id="connStatus">MENYAMBUNG...</span>
+    </div>
+  </header>
+
+  <div class="url-box" style="margin-bottom:10px;">
+    <b style="min-width:180px;">OBS: ALERT + TTS</b>
+    <code id="overlayUrl">memuat...</code>
+    <button class="btn" onclick="copyOverlayUrl()">Salin URL</button>
+    <span class="hint" style="margin:0;">→ Browser Source utama. Sudah termasuk alert + TTS.</span>
+  </div>
+  <div class="url-box" style="margin-bottom:10px;">
+    <b style="min-width:180px;">OBS: LEADERBOARD</b>
+    <code id="leaderboardUrl">memuat...</code>
+    <button class="btn" onclick="copyLeaderboardUrl()">Salin URL</button>
+    <span class="hint" style="margin:0;">→ Browser Source terpisah untuk leaderboard like.</span>
+  </div>
+  <div class="url-box" style="margin-bottom:20px;">
+    <b style="min-width:180px;">OBS: KOMENTAR LIVE</b>
+    <code id="commentsUrl">memuat...</code>
+    <button class="btn" onclick="copyCommentsUrl()">Salin URL</button>
+    <span class="hint" style="margin:0;">→ Browser Source terpisah. Menampilkan 8 komentar terbaru secara vertikal.</span>
+  </div>
+  <div class="url-box" style="margin-bottom:20px;">
+    <b style="min-width:180px;">OBS: MUSIC REQUEST</b>
+    <code id="musicUrl">memuat...</code>
+    <button class="btn" onclick="copyMusicUrl()">Salin URL</button>
+    <span class="hint" style="margin:0;">→ Browser Source musik + jumlah antrian request.</span>
+  </div>
+
+  <nav class="tabs">
+    <button class="active" data-tab="dashboard">Dashboard</button>
+    <button data-tab="tiktok">TikTok Live</button>
+    <button data-tab="events">Custom Events</button>
+    <button data-tab="overlays">Overlay Gallery</button>
+    <button data-tab="tts">Text-to-Speech</button>
+    <button data-tab="sound">Soundboard</button>
+    <button data-tab="music">Music Request</button>
+    <button data-tab="simulator">Simulator</button>
+  </nav>
+
+
+  <!-- DASHBOARD -->
+  <section class="panel active" id="tab-dashboard">
+    <div class="row" style="gap:12px;flex-wrap:wrap;">
+      <div class="strip" style="flex:1;min-width:150px;"><div class="tag">COMMENTS</div><div class="title" id="statComments">0</div><div class="desc">komentar masuk</div></div>
+      <div class="strip" style="flex:1;min-width:150px;"><div class="tag">LIKES</div><div class="title" id="statLikes">0</div><div class="desc">like sesi ini</div></div>
+      <div class="strip" style="flex:1;min-width:150px;"><div class="tag">FOLLOW</div><div class="title" id="statFollows">0</div><div class="desc">follow masuk</div></div>
+      <div class="strip" style="flex:1;min-width:150px;"><div class="tag">GIFT</div><div class="title" id="statGifts">0</div><div class="desc">gift masuk</div></div>
+    </div>
+
+    <div class="row" style="gap:16px;align-items:stretch;margin-top:16px;flex-wrap:wrap;">
+      <div class="field" style="flex:1;min-width:300px;">
+        <label>LIVE GOAL</label>
+        <div class="row">
+          <input id="goalTitle" placeholder="Contoh: Like Goal" style="flex:1;">
+          <select id="goalType" style="width:150px;">
+            <option value="likes">Likes</option><option value="comments">Komentar</option>
+            <option value="gifts">Gift</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <input id="goalCurrent" type="number" min="0" placeholder="Saat ini" style="flex:1;">
+          <input id="goalTarget" type="number" min="1" placeholder="Target" style="flex:1;">
+          <button class="btn" onclick="saveGoal()">Simpan Goal</button>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:12px;">
+          <input id="goalEnabled" type="checkbox" checked> tampilkan goal di overlay
+        </label>
+      </div>
+
+      <div class="field" style="flex:1;min-width:300px;">
+        <label>SESSION</label>
+        <div class="hint">Statistik disimpan selama server berjalan.</div>
+        <button class="btn" style="margin-top:12px;" onclick="resetStats()">Reset Statistik</button>
+        <div class="hint" style="margin-top:10px;">Event terakhir: <span id="lastEventAt">-</span></div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:16px;">
+      <label>RECENT ACTIVITY</label>
+      <div class="log" id="dashboardLog" style="max-height:220px;"></div>
+    </div>
+  </section>
+
+  <!-- TIKTOK LIVE -->
+  <section class="panel active" id="tab-tiktok">
+    <div class="field">
+      <label>USERNAME TIKTOK KAMU (tanpa @)</label>
+      <div class="row">
+        <input type="text" id="tiktokUsername" placeholder="contoh: namakamu" style="flex:1;">
+        <button class="btn" id="tiktokConnectBtn" style="background:var(--cyan); border-color:var(--cyan); color:#0A0D14;" onclick="connectTiktok()">Sambungkan</button>
+        <button class="btn" onclick="disconnectTiktok()">Putuskan</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>API KEY (opsional, sangat disarankan)</label>
+      <input type="text" id="tiktokApiKey" placeholder="tempel API key gratis dari eulerstream.com di sini">
+    </div>
+    <div id="tiktokStatusBox" class="strip" style="--accent: var(--muted); cursor:default;">
+      <div class="tag">STATUS</div>
+      <div class="title" id="tiktokStatusTitle">Belum tersambung</div>
+      <div class="desc" id="tiktokStatusDesc">Masukkan username lalu klik Sambungkan. Kamu harus sedang LIVE di TikTok supaya bisa nyambung.</div>
+    </div>
+    <p class="hint">
+      Setelah tersambung, follow/like/gift/komentar asli dari live TikTok kamu otomatis muncul di overlay —
+      tombol manual di tab "Alert Overlay" tetap bisa dipakai kapan saja sebagai tambahan.
+      Ini pakai library komunitas tidak resmi, jadi bisa berhenti bekerja sewaktu-waktu kalau TikTok mengubah sistemnya.
+      Tanpa API key, koneksi sering gagal/lambat karena dibatasi ketat — bikin API key gratis di
+      <a href="https://www.eulerstream.com" target="_blank" style="color:var(--cyan);">eulerstream.com</a> (tinggal daftar, tanpa kartu kredit),
+      lalu tempel di kolom di atas.
+    </p>
+  </section>
+
+  <!-- ALERTS -->
+  <section class="panel" id="tab-alerts">
+    <div class="grid">
+      <button class="strip" style="--accent: var(--cyan)" onclick="sendAlert('follow')">
+        <div class="tag">Follow</div>
+        <div class="title">Follower Baru</div>
+        <div class="desc">Tampilkan alert follow di overlay</div>
+      </button>
+      <button class="strip" style="--accent: var(--magenta)" onclick="sendAlert('like')">
+        <div class="tag">Like</div>
+        <div class="title">Like Masuk</div>
+        <div class="desc">Tampilkan alert like di overlay</div>
+      </button>
+      <button class="strip" style="--accent: var(--gold)" onclick="sendAlert('gift')">
+        <div class="tag">Gift</div>
+        <div class="title">Kirim Hadiah</div>
+        <div class="desc">Tampilkan alert donasi/gift</div>
+      </button>
+      <button class="strip" style="--accent: var(--violet)" onclick="sendAlert('comment')">
+        <div class="tag">Comment</div>
+        <div class="title">Komentar</div>
+        <div class="desc">Tampilkan komentar di overlay</div>
+      </button>
+    </div>
+
+    <div class="field" style="margin-top:20px;">
+      <label>DETAIL ALERT (opsional, dipakai untuk tombol di atas)</label>
+      <div class="row" style="gap:10px; flex-wrap:wrap;">
+        <input type="text" id="alertUser" placeholder="Nama pengguna" style="flex:1; min-width:160px; background:var(--panel); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:10px 12px; font-family:Inter,sans-serif;">
+        <input type="text" id="alertExtra" placeholder="Nama gift / isi komentar (jika ada)" style="flex:2; min-width:200px; background:var(--panel); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:10px 12px; font-family:Inter,sans-serif;">
+      </div>
+    </div>
+
+    <p class="hint">
+      Ini adalah trigger manual buat testing atau alert tambahan. Kalau kamu sudah tersambung ke live TikTok
+      di tab "TikTok Live", follow/like/gift/komentar asli juga otomatis muncul di sini tanpa perlu ditekan manual.
+    </p>
+  </section>
+
+
+  <!-- CUSTOM EVENTS -->
+  <section class="panel" id="tab-events">
+    <div class="preview-toolbar">
+      <div>
+        <div class="display" style="font-size:18px;font-weight:700;">Custom Action Events</div>
+        <div class="hint">Konsepnya seperti rule: ketika event tertentu terjadi, jalankan aksi otomatis.</div>
+      </div>
+      <button class="btn" onclick="addAction()">+ Tambah Event</button>
+    </div>
+    <div id="actionList"></div>
+    <div class="hint" style="margin-top:14px;">
+      Variabel yang bisa dipakai: <code>{username}</code>, <code>{comment}</code>, <code>{gift}</code>.
+      Contoh: komentar mengandung <b>halo</b> → TTS menyapa penonton.
+    </div>
+    <button class="btn" style="margin-top:12px;background:var(--violet);border-color:var(--violet);color:#fff;" onclick="saveActions()">Simpan Semua Rules</button>
+  </section>
+
+  <!-- OVERLAY GALLERY -->
+  <section class="panel" id="tab-overlays">
+    <div class="display" style="font-size:18px;font-weight:700;">Overlay Gallery</div>
+    <p class="hint">Pilih tema lalu lihat hasilnya di preview. Tema ini berlaku untuk chat, alert, TTS bubble, dan goal.</p>
+    <div class="theme-grid" style="margin-top:14px;">
+      <button class="theme-card active" data-theme="glass" onclick="setTheme('glass')"><div class="theme-swatch" style="background:linear-gradient(120deg,#131826,#171e2e);"></div><b>Glass Dark</b><div class="hint">Clean & profesional</div></button>
+      <button class="theme-card" data-theme="neon" onclick="setTheme('neon')"><div class="theme-swatch" style="background:linear-gradient(120deg,#090c19,#28154a);"></div><b>Neon</b><div class="hint">Gaming / energetic</div></button>
+      <button class="theme-card" data-theme="bubble" onclick="setTheme('bubble')"><div class="theme-swatch" style="background:linear-gradient(120deg,#fff,#eef1ff);"></div><b>Light Bubble</b><div class="hint">Terang & friendly</div></button>
+      <button class="theme-card" data-theme="minimal" onclick="setTheme('minimal')"><div class="theme-swatch" style="background:#0a0d14;"></div><b>Minimal</b><div class="hint">Tidak mengganggu gameplay</div></button>
+      <button class="theme-card" data-theme="pink" onclick="setTheme('pink')"><div class="theme-swatch" style="background:linear-gradient(120deg,#230a19,#50102f);"></div><b>Pink Live</b><div class="hint">Playful & bright</div></button>
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>STYLE BUBBLE KOMENTAR</label>
+      <div class="hint">Ini benar-benar mengubah bentuk/layout bubble, bukan cuma warna. Jarak default juga dibuat lebih renggang.</div>
+      <div class="theme-grid" style="margin-top:12px;">
+        <button class="theme-card chat-style-card active" data-chat-style="glass-card" onclick="setChatStyle('glass-card')"><div class="chat-demo glass-demo"><span>AA</span><b>@user</b><small>Halo bang!</small></div><b>Glass Card</b><div class="hint">Clean</div></button>
+        <button class="theme-card chat-style-card" data-chat-style="pill" onclick="setChatStyle('pill')"><div class="chat-demo pill-demo"><span>AA</span><b>@user</b><small>Halo bang!</small></div><b>Pill Bubble</b><div class="hint">Modern</div></button>
+        <button class="theme-card chat-style-card" data-chat-style="speech" onclick="setChatStyle('speech')"><div class="chat-demo speech-demo"><span>AA</span><div><b>@user</b><small>Halo bang!</small></div></div><b>Speech Bubble</b><div class="hint">Bubble + tail</div></button>
+        <button class="theme-card chat-style-card" data-chat-style="stacked" onclick="setChatStyle('stacked')"><div class="chat-demo stacked-demo"><span>AA</span><div><b>@user</b><small>Halo bang!</small></div></div><b>Stacked</b><div class="hint">Streamer style</div></button>
+        <button class="theme-card chat-style-card" data-chat-style="neon-line" onclick="setChatStyle('neon-line')"><div class="chat-demo neon-demo"><span>AA</span><div><b>@user</b><small>Halo bang!</small></div></div><b>Neon Line</b><div class="hint">Gaming</div></button>
+        <button class="theme-card chat-style-card" data-chat-style="compact" onclick="setChatStyle('compact')"><div class="chat-demo compact-demo"><span>AA</span><div><b>@user</b><small>Halo bang!</small></div></div><b>Compact</b><div class="hint">Minimal</div></button>
+      </div>
+      <div class="row" style="margin-top:14px;gap:16px;align-items:center;flex-wrap:wrap;">
+        <label style="min-width:220px;flex:1;">JARAK ANTAR KOMENTAR <input id="chatGap" type="range" min="8" max="28" step="1" value="16" oninput="setChatGap(this.value)"></label>
+        <span class="strip" style="min-width:110px;--accent:var(--violet);"><span class="tag">GAP</span><span class="title" id="chatGapValue">16px</span></span>
+      </div>
+      <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;"><button class="btn" onclick="saveChatStyle()">Simpan Style Chat</button><button class="btn" onclick="previewComment()">▶ Test Komentar</button><span class="hint" id="chatStyleStatus" style="margin:0;">Glass Card · 14px</span></div>
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>NOTIFIKASI FOLLOW &amp; GIFT — ANIMASI</label>
+      <div class="hint">Follow/Gift akan muncul sebagai animasi beberapa detik di atas overlay, terpisah dari chat permanen. Username ditampilkan sebagai @username.</div>
+      <div class="row" style="margin-top:12px;gap:18px;flex-wrap:wrap;align-items:stretch;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;min-width:180px;"><input id="animEnabled" type="checkbox" checked> Aktifkan animasi</label>
+        <div class="field" style="margin:0;min-width:190px;flex:1;"><label>STYLE FOLLOW</label><select id="followAnimStyle"><option value="wings">Style 1 — Crown Wings</option><option value="neon">Style 2 — Neon Burst</option><option value="cat">Style 3 — Music Cat</option></select></div>
+        <div class="field" style="margin:0;min-width:190px;flex:1;"><label>STYLE GIFT</label><select id="giftAnimStyle"><option value="treasure">Style 1 — Treasure</option><option value="rose">Style 2 — Rose</option><option value="universe">Style 3 — Universe</option></select></div>
+      </div>
+      <div class="row" style="margin-top:12px;gap:18px;flex-wrap:wrap;align-items:stretch;">
+        <div class="field" style="margin:0;min-width:180px;flex:1;"><label>DURASI FOLLOW (DETIK)</label><input id="followAnimDuration" type="number" min="2" max="10" step="1" value="4"></div>
+        <div class="field" style="margin:0;min-width:180px;flex:1;"><label>DURASI GIFT (DETIK)</label><input id="giftAnimDuration" type="number" min="2" max="10" step="1" value="5"></div>
+        <div class="field" style="margin:0;min-width:190px;flex:1;"><label>POSISI</label><select id="animPosition"><option value="top-center">Atas Tengah</option><option value="center">Tengah</option><option value="bottom-center">Bawah Tengah</option></select></div>
+      </div>
+      <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap;"><button class="btn" onclick="saveAnimationSettings()">Simpan Animasi</button><button class="btn" onclick="testAnimation('follow')">▶ Test Follow</button><button class="btn" onclick="testAnimation('gift')">▶ Test Gift</button><span class="hint" id="animStatus" style="margin:0;">Belum disimpan.</span></div>
+    </div>
+
+    <div class="field" style="margin-top:18px;">
+      <label>BROWSER SOURCE — PISAHKAN</label><div class="hint">Gunakan Browser Source terpisah: Chat, Goal, Alert, dan TTS Audio. Jangan gabungkan Chat + Goal.</div>
+      <div class="url-box"><b style="min-width:180px;">KOMENTAR LIVE</b><code id="srcChat">memuat...</code><button class="btn" onclick="cp('srcChat')">Salin</button></div>
+      <div class="url-box"><b style="min-width:180px;">FOLLOW + GIFT</b><code id="srcFollowGift">memuat...</code><button class="btn" onclick="cp('srcFollowGift')">Salin</button></div>
+      <div class="url-box"><b style="min-width:180px;">LIVE GOAL</b><code id="srcGoal">memuat...</code><button class="btn" onclick="cp('srcGoal')">Salin</button></div>
+      <div class="url-box"><b style="min-width:180px;">ALERT + TTS</b><code id="srcAlert">memuat...</code><button class="btn" onclick="cp('srcAlert')">Salin</button></div>
+      <div class="url-box"><b style="min-width:180px;">TTS ONLY (opsional)</b><code id="srcTts">memuat...</code><button class="btn" onclick="cp('srcTts')">Salin</button></div>
+      <div class="url-box"><code id="galleryCommentsUrl">memuat...</code><button class="btn" onclick="copyCommentsUrl()">Salin</button></div>
+      <div class="url-box"><code id="galleryOverlayUrl">memuat...</code><button class="btn" onclick="copyOverlayUrl()">Salin</button></div>
+    </div>
+  </section>
+
+  <!-- SOUNDBOARD -->
+  <section class="panel" id="tab-sound">
+    <div class="grid" id="soundGrid"></div>
+    <p class="hint">
+      Suara di atas dibuat langsung di browser (synth sederhana), jadi langsung bisa dipakai tanpa file tambahan.
+      Mau pakai file MP3 sendiri? taruh file di folder <code class="mono">public/sounds/</code> lalu kasih tahu aku nama filenya,
+      nanti aku sambungkan ke tombolnya.
+    </p>
+  </section>
+
+
+  <!-- TTS -->
+  <section class="panel" id="tab-tts">
+    <div class="field">
+      <label>BACA OTOMATIS DARI LIVE TIKTOK</label>
+      <div class="row" style="gap:24px; flex-wrap:wrap;">
+        <label style="display:flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-size:14px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" id="ttsReadComments" onchange="updateTtsSettings()" style="width:16px; height:16px; accent-color: var(--violet);">
+          Baca komentar otomatis
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-size:14px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" id="ttsReadLikes" onchange="updateTtsSettings()" style="width:16px; height:16px; accent-color: var(--violet);">
+          Baca like otomatis
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-size:14px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" id="ttsReadFollows" onchange="updateTtsSettings()" style="width:16px; height:16px; accent-color: var(--violet);">
+          Baca follow via TTS
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-family:'Inter',sans-serif; font-size:14px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" id="ttsReadGifts" onchange="updateTtsSettings()" style="width:16px; height:16px; accent-color: var(--violet);">
+          Baca gift via TTS
+        </label>
+      </div>
+      <p class="hint" style="margin-top:8px;">
+        Komentar dibaca dari teks komentarnya saja (tanpa username). Follow dan gift default memakai SFX khusus, bukan TTS.
+        Jika ingin TTS untuk follow/gift, centang opsinya. Like bisa dibacakan, tetapi sistem menggabungkan like yang datang sangat cepat.
+      </p>
+    </div>
+
+    <div class="field" style="border-top:1px solid var(--line); padding-top:20px;">
+      <label>PILIH SUARA</label>
+      <select id="ttsVoice" onchange="updateTtsSettings()">
+        <option value="">Otomatis — Bahasa Indonesia</option>
+      </select>
+      <div class="voice-status" id="voiceStatus">Mencari suara yang tersedia di browser…</div>
+      <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap;">
+        <button class="btn" onclick="unlockTts()">🔊 Aktifkan TTS Live</button>
+        <button class="btn" onclick="testSelectedVoice()">Tes Suara Terpilih</button>
+      </div>
+      <div class="hint" id="ttsDiagnostic" style="margin-top:7px;">
+        TTS komentar LIVE berjalan dari panel ini setelah tombol "Aktifkan TTS Live" ditekan sekali. Ini menghindari blokir autoplay pada Browser Source OBS.
+      </div>
+      <p class="hint">
+        Daftar ini mengikuti suara yang tersedia di komputer/browser. Jika Chrome menyediakan
+        suara Google, biasanya akan muncul sebagai <b>Google ...</b>. Suara perempuan/laki-laki
+        yang tersedia juga akan muncul di sini.
+      </p>
+    </div>
+
+    <div class="row" style="gap:16px; flex-wrap:wrap;">
+      <div class="field" style="flex:1; min-width:220px; margin:0;">
+        <label>KECEPATAN</label>
+        <input type="range" id="ttsRate" min="0.6" max="1.5" step="0.05" value="1" oninput="updateTtsSettings()">
+        <div class="voice-status"><span id="ttsRateValue">1.00x</span></div>
+      </div>
+      <div class="field" style="flex:1; min-width:220px; margin:0;">
+        <label>NADA SUARA</label>
+        <input type="range" id="ttsPitch" min="0.5" max="1.5" step="0.05" value="1" oninput="updateTtsSettings()">
+        <div class="voice-status"><span id="ttsPitchValue">1.00</span></div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:24px; border-top:1px solid var(--line); padding-top:20px;">
+      <label>PESAN MANUAL — UNTUK TEST / PENGUMUMAN</label>
+      <textarea id="ttsText" placeholder="Contoh: Terima kasih sudah mampir!"></textarea>
+    </div>
+    <div class="row">
+      <button class="btn" style="background:var(--violet); border-color:var(--violet); color:#fff;" onclick="sendTts()">Baca di Overlay</button>
+      <button class="btn" onclick="previewTts()">Dengar Preview</button>
+    </div>
+    <p class="hint">
+      Kolom manual bukan untuk membaca chat otomatis. Fungsinya hanya untuk testing suara atau
+      menyampaikan pengumuman dari kamu sendiri. Komentar TikTok akan masuk otomatis lewat event LIVE.
+    </p>
+  </section>
+
+
+
+
+  <!-- MUSIC REQUEST -->
+  <section class="panel" id="tab-music">
+    <div class="panel" style="display:block">
+      <h2>🎵 Music Request YouTube</h2>
+      <p class="hint">Penonton cukup komentar <code>!song - judul lagu</code>. Sistem mencari hasil YouTube pertama, memasukkannya ke antrean, lalu memutar otomatis. Browser Source <b>MUSIC REQUEST</b> menampilkan lagu yang sedang diputar dan jumlah antrean.</p>
+      <div class="grid">
+        <div class="strip"><div class="tag">CURRENT</div><div class="title" id="musicCurrentTitle">Belum ada lagu</div><div class="desc" id="musicCurrentBy">-</div></div>
+        <div class="strip"><div class="tag">QUEUE</div><div class="title" id="musicQueueCount">0</div><div class="desc">lagu menunggu</div></div>
+      </div>
+      <div class="row" style="margin-top:14px;flex-wrap:wrap;">
+        <button class="btn" onclick="musicSkip()">⏭ Skip Lagu</button>
+        <button class="btn" onclick="musicClear()">🗑 Clear Queue</button>
+        <button class="btn" onclick="musicStop()">⏹ Stop Music</button>
+      </div>
+      <div class="field" style="margin-top:16px;">
+        <label>TEST MUSIC REQUEST</label>
+        <div class="row"><input id="musicTestQuery" type="text" placeholder="mis. Alan Walker Faded" style="flex:1"><button class="btn" onclick="testMusicRequest()">🎵 Request Test</button></div>
+      </div>
+      <div id="musicQueueList" class="log" style="max-height:240px;margin-top:14px;"></div>
+      <p class="hint">Catatan: kualitas video meminta mode <b>tiny/144p</b> bila YouTube menyediakan level tersebut. YouTube tetap dapat memilih kualitas adaptif sendiri. Untuk autoplay audio, Browser Source OBS sebaiknya mengaktifkan <b>Control audio via OBS</b>.</p>
+    </div>
+  </section>
+
+  <!-- SIMULATOR -->
+  <section class="panel" id="tab-simulator">
+    <div class="display" style="font-size:18px;font-weight:700;">Panel Simulator</div>
+    <p class="hint">Tes workflow tanpa harus menunggu event TikTok asli. Event simulator tetap melewati custom action rules.</p>
+    <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:14px;">
+      <button class="btn" onclick="simulateEvent('comment')">💬 Komentar</button><button class="btn" onclick="simulateTtsComment()">🗣️ Tes Chat + TTS</button>
+      <button class="btn" onclick="simulateEvent('like')">❤️ Like</button>
+      <button class="btn" onclick="simulateLikeLeaderboard()">🏆 Like + Leaderboard</button>
+      <button class="btn" onclick="simulateEvent('follow')">➕ Follow + SFX</button>
+      <button class="btn" onclick="simulateEvent('gift')">🎁 Gift + SFX</button>
+      <button class="btn" onclick="playLiveSfx('follow'); logEvent('Tes suara follow.mp3 diputar.')">🔊 Test Follow SFX</button>
+      <button class="btn" onclick="playLiveSfx('gift'); logEvent('Tes suara gift.mp3 diputar.')">🔊 Test Gift SFX</button>
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>CONTOH KOMENTAR</label>
+      <input id="simComment" value="halo, tes overlay!">
+    </div>
+    <div class="field">
+      <label>NAMA PENONTON</label>
+      <input id="simUsername" value="PenontonDemo">
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>SIMULASI LEADERBOARD LIKE</label>
+      <div class="row" style="gap:10px;flex-wrap:wrap;">
+        <input id="simLikeCount" type="number" min="1" value="25" style="max-width:150px;" placeholder="Jumlah like">
+        <button class="btn" onclick="simulateLikeLeaderboard()">❤️ Tambah Like &amp; Update Leaderboard</button>
+        <button class="btn" onclick="resetSimLeaderboard()">↺ Reset Leaderboard</button>
+      </div>
+      <p class="hint">Gunakan nama penonton di atas. Tombol ini menguji angka like sekaligus tampilan Browser Source leaderboard.</p>
+    </div>
+  </section>
+
+  <!-- OVERLAY PREVIEW -->
+  <section class="panel" id="tab-preview">
+    <div class="preview-toolbar">
+      <div>
+        <div class="display" style="font-size:18px;font-weight:700;">Preview Chat Overlay</div>
+        <div class="hint" style="margin:2px 0 0;">Ini adalah gambaran yang sama dengan Browser Source komentar di OBS.</div>
+      </div>
+      <button class="btn" onclick="previewComment()">Tampilkan Contoh Komentar</button>
+    </div>
+
+    <div class="preview-wrap">
+      <iframe id="commentPreviewFrame" class="preview-frame" src="/overlay-comments.html?preview=1" title="Preview overlay komentar"></iframe>
+    </div>
+
+    <div class="field" style="margin-top:20px;">
+      <label>TEMA OVERLAY</label>
+      <div class="theme-grid">
+        <button class="theme-card active" data-theme="glass" onclick="setTheme('glass')">
+          <div class="theme-swatch" style="background:linear-gradient(120deg,#131826,#171e2e);"></div>
+          <b>Glass Dark</b><div class="hint">Gelap, clean, cocok OBS.</div>
+        </button>
+        <button class="theme-card" data-theme="neon" onclick="setTheme('neon')">
+          <div class="theme-swatch" style="background:linear-gradient(120deg,#090c19,#28154a);"></div>
+          <b>Neon</b><div class="hint">Kontras dengan glow.</div>
+        </button>
+        <button class="theme-card" data-theme="bubble" onclick="setTheme('bubble')">
+          <div class="theme-swatch" style="background:linear-gradient(120deg,#fff,#eef1ff);"></div>
+          <b>Light Bubble</b><div class="hint">Terang seperti chat bubble.</div>
+        </button>
+        <button class="theme-card" data-theme="minimal" onclick="setTheme('minimal')">
+          <div class="theme-swatch" style="background:#0a0d14;"></div>
+          <b>Minimal</b><div class="hint">Sederhana dan ringan.</div>
+        </button>
+        <button class="theme-card" data-theme="pink" onclick="setTheme('pink')">
+          <div class="theme-swatch" style="background:linear-gradient(120deg,#230a19,#50102f);"></div>
+          <b>Pink Live</b><div class="hint">Lebih playful untuk live.</div>
+        </button>
+      </div>
+    </div>
+
+    <p class="hint">
+      Tema berlaku ke overlay komentar dan alert utama. Setelah memilih tema, URL
+      <code class="mono">/overlay-comments.html</code> di OBS tetap sama — tidak perlu mengganti Browser Source.
+    </p>
+  </section>
+
+  <div class="log" id="eventLog">
+    <div class="mono">Menunggu aktivitas…</div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const statusEl = document.getElementById('connStatus');
+  socket.on('connect', () => statusEl.textContent = 'TERSAMBUNG');
+  socket.on('disconnect', () => statusEl.textContent = 'TERPUTUS');
+
+  // ---- TTS voice list ----
+  let availableVoices = [];
+  function loadVoiceOptions(){
+    availableVoices = speechSynthesis.getVoices() || [];
+    const select = document.getElementById('ttsVoice');
+    if(!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="">Otomatis — Bahasa Indonesia</option>';
+
+    // Put Google voices first, then Indonesian voices, then the rest.
+    const sorted = [...availableVoices].sort((a,b) => {
+      const score = v => (v.name.toLowerCase().includes('google') ? 6 : 0) + (/^id/i.test(v.lang) ? 4 : 0);
+      return score(b) - score(a) || a.name.localeCompare(b.name);
+    });
+    sorted.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      const genderHint = /female|woman|girl/i.test(v.name) ? ' • perempuan'
+        : /male|man|boy/i.test(v.name) ? ' • laki-laki' : '';
+      opt.textContent = `${v.name} — ${v.lang}${genderHint}`;
+      select.appendChild(opt);
+    });
+    if([...select.options].some(o => o.value === current)) select.value = current;
+    document.getElementById('voiceStatus').textContent =
+      availableVoices.length
+        ? `${availableVoices.length} suara tersedia. ${availableVoices.filter(v => /google/i.test(v.name)).length} suara Google terdeteksi.`
+        : 'Browser belum memberikan daftar suara. Coba buka ulang panel.';
+  }
+  loadVoiceOptions();
+  speechSynthesis.onvoiceschanged = loadVoiceOptions;
+
+  // log incoming live activity too (comments/likes/gifts/follows), not just manual actions
+  const ACTIVITY_LABEL = { follow: 'Follow baru', like: 'Like masuk', gift: 'Gift masuk', comment: 'Komentar masuk' };
+  socket.on('event', (payload) => {
+    if(payload.kind === 'alert'){
+      const label = ACTIVITY_LABEL[payload.type] || 'Aktivitas';
+      const extra = payload.extra ? ` — "${payload.extra}"` : '';
+      logEvent(`${label}: ${payload.username}${extra}`);
+    }
+  });
+
+  // overlay url
+  const overlayUrl = location.origin + '/overlay.html?v=22';
+  document.getElementById('overlayUrl').textContent = overlayUrl;
+  function copyOverlayUrl(){
+    navigator.clipboard.writeText(overlayUrl);
+    logEvent('URL overlay disalin ke clipboard.');
+  }
+
+  // leaderboard overlay url
+  const leaderboardUrl = location.origin + '/overlay-leaderboard.html?v=27';
+  document.getElementById('leaderboardUrl').textContent = leaderboardUrl;
+  function copyLeaderboardUrl(){
+    navigator.clipboard.writeText(leaderboardUrl);
+    logEvent('URL overlay leaderboard disalin ke clipboard.');
+  }
+
+  // comments overlay url
+  const commentsUrl = location.origin + '/overlay-comments.html?v=27';
+  document.getElementById('commentsUrl').textContent = commentsUrl;
+  const musicUrl = location.origin + '/overlay-music.html?v=27';
+  document.getElementById('musicUrl').textContent = musicUrl;
+  function copyCommentsUrl(){
+    navigator.clipboard.writeText(commentsUrl);
+    logEvent('URL overlay komentar disalin ke clipboard.');
+  }
+
+  const followGiftUrl = location.origin + '/overlay-follow-gift.html?v=22';
+  function copyFollowGiftUrl(){
+    navigator.clipboard.writeText(followGiftUrl);
+    logEvent('URL overlay Follow + Gift disalin ke clipboard.');
+  }
+
+  // tabs
+  document.querySelectorAll('nav.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function logEvent(text){
+    const log = document.getElementById('eventLog');
+    const line = document.createElement('div');
+    const t = new Date().toLocaleTimeString('id-ID');
+    line.textContent = `[${t}] ${text}`;
+    log.prepend(line);
+  }
+
+  // ---- tiktok live ----
+  let tiktokTimeout = null;
+  function connectTiktok(){
+    const username = document.getElementById('tiktokUsername').value.trim().replace(/^@/, '');
+    const signApiKey = document.getElementById('tiktokApiKey').value.trim();
+    if(!username) return;
+    setTiktokStatus('Menyambungkan…', `Menghubungkan ke @${username}`, 'var(--gold)');
+    socket.emit('tiktok:connect', { username, signApiKey });
+    logEvent(`Mencoba menyambung ke TikTok: @${username}`);
+
+    clearTimeout(tiktokTimeout);
+    tiktokTimeout = setTimeout(() => {
+      setTiktokStatus('Waktu habis', 'Tidak ada respon setelah 20 detik. Cek apakah kamu benar-benar sedang live, username benar, atau coba tambahkan API key.', 'var(--magenta)');
+      logEvent('TikTok: waktu tunggu koneksi habis.');
+    }, 20000);
+  }
+  function disconnectTiktok(){
+    clearTimeout(tiktokTimeout);
+    socket.emit('tiktok:disconnect');
+    logEvent('Memutus koneksi TikTok.');
+  }
+  function setTiktokStatus(title, desc, color){
+    clearTimeout(tiktokTimeout);
+    document.getElementById('tiktokStatusTitle').textContent = title;
+    document.getElementById('tiktokStatusDesc').textContent = desc;
+    document.getElementById('tiktokStatusBox').style.setProperty('--accent', color);
+  }
+  socket.on('tiktok:status', ({ connected, username, error, roomId }) => {
+    if(connected){
+      setTiktokStatus('Tersambung', `Live sebagai @${username} (room ${roomId})`, 'var(--cyan)');
+      logEvent(`Tersambung ke live TikTok @${username}`);
+    } else if(error){
+      setTiktokStatus('Gagal / terputus', error, 'var(--magenta)');
+      logEvent(`TikTok: ${error}`);
+    } else {
+      setTiktokStatus('Terputus', `Tidak lagi tersambung ke @${username || ''}`, 'var(--muted)');
+      logEvent('Koneksi TikTok terputus.');
+    }
+  });
+
+  // ---- alerts ----
+  function sendAlert(type){
+    const username = document.getElementById('alertUser').value || randomName();
+    const extra = document.getElementById('alertExtra').value;
+    const payload = { kind: 'alert', type, username, extra };
+    socket.emit('trigger', payload);
+    logEvent(`Alert dikirim: ${type} — ${username}${extra ? ' — ' + extra : ''}`);
+  }
+  function randomName(){
+    const names = ['Andi', 'Sari', 'Budi', 'Dewi', 'Rian', 'Nadia'];
+    return names[Math.floor(Math.random()*names.length)];
+  }
+
+  // ---- soundboard ----
+  const sounds = [
+    { id:'clap', label:'Tepuk Tangan', color:'var(--cyan)' },
+    { id:'horn', label:'Air Horn', color:'var(--gold)' },
+    { id:'ding', label:'Ding', color:'var(--violet)' },
+    { id:'drum', label:'Drum Roll', color:'var(--magenta)' },
+    { id:'boo',  label:'Boo', color:'var(--muted)' },
+    { id:'coin', label:'Coin', color:'var(--gold)' },
+  ];
+  const grid = document.getElementById('soundGrid');
+  sounds.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'strip';
+    b.style.setProperty('--accent', s.color);
+    b.innerHTML = `<div class="tag">SFX</div><div class="title">${s.label}</div><div class="desc">Putar di overlay</div>`;
+    b.onclick = () => {
+      socket.emit('trigger', { kind:'sound', id:s.id });
+      logEvent(`Suara dikirim: ${s.label}`);
+      playSynth(s.id); // local preview too
+    };
+    grid.appendChild(b);
+  });
+
+  // simple local Web Audio synth, shared logic also lives in overlay.html
+  function playSynth(id){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    function tone(freq, start, dur, type='sine', gain=0.2){
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0, now+start);
+      g.gain.linearRampToValueAtTime(gain, now+start+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, now+start+dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(now+start); o.stop(now+start+dur+0.05);
+    }
+    if(id==='clap'){ for(let i=0;i<3;i++) tone(200+Math.random()*200, i*0.08, 0.06, 'square', 0.15); }
+    else if(id==='horn'){ tone(220,0,0.6,'sawtooth',0.18); tone(220,0.6,0.6,'sawtooth',0.18); }
+    else if(id==='ding'){ tone(880,0,0.5,'sine',0.2); tone(1320,0.05,0.4,'sine',0.12); }
+    else if(id==='drum'){ for(let i=0;i<10;i++) tone(80+i*4, i*0.05, 0.08, 'triangle', 0.15); }
+    else if(id==='boo'){ tone(180,0,0.5,'sawtooth',0.15); tone(140,0.3,0.6,'sawtooth',0.15); }
+    else if(id==='coin'){ tone(988,0,0.1,'square',0.15); tone(1319,0.1,0.25,'square',0.15); }
+  }
+
+  // ---- TTS settings ----
+  function currentTtsSettings(){
+    return {
+      readComments: document.getElementById('ttsReadComments').checked,
+      readLikes: document.getElementById('ttsReadLikes').checked,
+      readFollows: document.getElementById('ttsReadFollows').checked,
+      readGifts: document.getElementById('ttsReadGifts').checked,
+      voiceName: document.getElementById('ttsVoice').value,
+      rate: Number(document.getElementById('ttsRate').value),
+      pitch: Number(document.getElementById('ttsPitch').value),
+    };
+  }
+
+  function updateTtsSettings(){
+    const settings = currentTtsSettings();
+    document.getElementById('ttsRateValue').textContent = settings.rate.toFixed(2) + 'x';
+    document.getElementById('ttsPitchValue').textContent = settings.pitch.toFixed(2);
+    socket.emit('tts:settings', settings);
+    logEvent(`TTS: komentar ${settings.readComments ? 'ON' : 'OFF'}, like ${settings.readLikes ? 'ON' : 'OFF'}, follow ${settings.readFollows ? 'ON' : 'OFF'}, gift ${settings.readGifts ? 'ON' : 'OFF'}, suara ${settings.voiceName || 'otomatis'}`);
+  }
+
+  socket.on('tts:settings', (settings) => {
+    if(!settings) return;
+    document.getElementById('ttsReadComments').checked = !!settings.readComments;
+    document.getElementById('ttsReadLikes').checked = !!settings.readLikes;
+    document.getElementById('ttsReadFollows').checked = settings.readFollows === true;
+    document.getElementById('ttsReadGifts').checked = settings.readGifts === true;
+    document.getElementById('ttsVoice').value = settings.voiceName || '';
+    document.getElementById('ttsRate').value = settings.rate || 1;
+    document.getElementById('ttsPitch').value = settings.pitch || 1;
+    document.getElementById('ttsRateValue').textContent = Number(settings.rate || 1).toFixed(2) + 'x';
+    document.getElementById('ttsPitchValue').textContent = Number(settings.pitch || 1).toFixed(2);
+  });
+
+  // ---- TTS manual/live ----
+  // TTS intentionally runs in the CONTROL PANEL, not in OBS Browser Source.
+  // The first click on "Aktifkan TTS Live" is the real user gesture that
+  // unlocks speechSynthesis; after that, live comments are queued here.
+  let ttsUnlocked = false;
+  let liveTtsQueue = [];
+  let liveTtsBusy = false;
+
+  function selectedVoice(){
+    const wanted = document.getElementById('ttsVoice').value;
+    return availableVoices.find(v => v.name === wanted) ||
+      availableVoices.find(v => /^id-ID$/i.test(v.lang)) ||
+      availableVoices.find(v => /^id/i.test(v.lang)) || null;
+  }
+
+  let sfxUnlocked = false;
+  const sfxAudioCache = {};
+  function unlockSfxAudio(){
+    sfxUnlocked = true;
+    for (const id of ['follow','gift']) {
+      try {
+        const a = sfxAudioCache[id] || new Audio(`/sounds/${id}.mp3?v=16`);
+        a.preload='auto'; a.volume=1; a.muted=true;
+        sfxAudioCache[id]=a;
+        const play=a.play();
+        if(play && play.then) play.then(()=>{a.pause();a.currentTime=0;a.muted=false;}).catch(()=>{});
+      } catch(e){}
+    }
+  }
+  function playLiveSfx(id){
+    if(!sfxUnlocked) return;
+    try {
+      const a=sfxAudioCache[id] || new Audio(`/sounds/${id}.mp3?v=16`);
+      a.preload='auto'; a.volume=1; a.muted=false; a.currentTime=0;
+      sfxAudioCache[id]=a;
+      const p=a.play(); if(p && p.catch) p.catch(()=>{});
+    } catch(e){}
+  }
+
+  function refreshVoices(){
+    try { availableVoices = speechSynthesis.getVoices() || []; } catch(e) { availableVoices=[]; }
+    loadVoiceOptions();
+  }
+
+  function unlockTts(){
+    // This function is called directly by a user click. Do NOT wait for onend
+    // before marking the engine unlocked; Chrome can reject the first utterance
+    // and otherwise every live comment would remain stuck in the queue.
+    unlockSfxAudio();
+    refreshVoices();
+    ttsUnlocked = true;
+    try { speechSynthesis.resume(); } catch(e) {}
+
+    const u = new SpeechSynthesisUtterance('TTS live aktif.');
+    const v = selectedVoice();
+    if(v){ u.voice=v; u.lang=v.lang || 'id-ID'; } else u.lang='id-ID';
+    u.volume=1; u.rate=1; u.pitch=1;
+    u.onend=()=>{ document.getElementById('ttsDiagnostic').textContent='TTS Live AKTIF. Komentar akan dibaca dari panel ini tanpa username.'; };
+    u.onerror=(e)=>{ document.getElementById('ttsDiagnostic').textContent='TTS aktif, tetapi browser menolak suara. Klik "Tes Suara Terpilih" sekali; jika itu juga diam, cek volume/tab mute dan izin audio browser.'; };
+    // Give the browser a moment after resume so the utterance is not lost.
+    setTimeout(()=>{
+      try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch(e) {
+        document.getElementById('ttsDiagnostic').textContent='Gagal menjalankan TTS: '+(e.message||e);
+      }
+    }, 80);
+  }
+
+  function testSelectedVoice(){
+    ttsUnlocked = true;
+    refreshVoices();
+    speakLocal('Ini adalah tes suara TTS. Jika terdengar, TTS Live siap membaca komentar.');
+  }
+
+  function speakLocal(text){
+    if(!text) return;
+    refreshVoices();
+    try { speechSynthesis.resume(); } catch(e) {}
+    const u = new SpeechSynthesisUtterance(String(text));
+    const v = selectedVoice();
+    if(v){ u.voice=v; u.lang=v.lang || 'id-ID'; } else u.lang='id-ID';
+    u.rate=Number(document.getElementById('ttsRate').value)||1;
+    u.pitch=Number(document.getElementById('ttsPitch').value)||1;
+    u.volume=1;
+    u.onerror=(e)=>{ document.getElementById('ttsDiagnostic').textContent='Tes TTS gagal: '+(e.error||'browser menolak audio'); };
+    try { speechSynthesis.speak(u); } catch(e) { document.getElementById('ttsDiagnostic').textContent='Tes TTS gagal: '+(e.message||e); }
+  }
+
+  function queueLiveTts(text){
+    if(!text || !ttsUnlocked) return;
+    liveTtsQueue.push(String(text).slice(0,500));
+    if(liveTtsQueue.length>20) liveTtsQueue.shift();
+    pumpLiveTts();
+  }
+
+  function pumpLiveTts(){
+    if(liveTtsBusy || !liveTtsQueue.length || !ttsUnlocked) return;
+    const text=liveTtsQueue.shift();
+    refreshVoices();
+    const u=new SpeechSynthesisUtterance(text);
+    const v=selectedVoice();
+    if(v){u.voice=v;u.lang=v.lang||'id-ID';} else u.lang='id-ID';
+    u.rate=Number(document.getElementById('ttsRate').value)||1;
+    u.pitch=Number(document.getElementById('ttsPitch').value)||1;
+    u.volume=1;
+    liveTtsBusy=true;
+    const done=()=>{ if(!liveTtsBusy)return; liveTtsBusy=false; setTimeout(pumpLiveTts,100); };
+    u.onend=done;
+    u.onerror=()=>{ liveTtsBusy=false; liveTtsQueue.unshift(text); document.getElementById('ttsDiagnostic').textContent='TTS event gagal dibaca; antrean akan dicoba lagi.'; setTimeout(pumpLiveTts,500); };
+    try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch(e) { done(); liveTtsQueue.unshift(text); setTimeout(pumpLiveTts,500); }
+  }
+
+  speechSynthesis.onvoiceschanged=()=>refreshVoices();
+  setInterval(()=>{ try { if(speechSynthesis.paused) speechSynthesis.resume(); refreshVoices(); if(ttsUnlocked && liveTtsQueue.length && !liveTtsBusy) pumpLiveTts(); } catch(e){} }, 1500);
+
+  socket.on('event', (payload) => {
+    if(!payload || payload.kind !== 'alert') return;
+    if(payload.type==='comment' && currentTtsSettings().readComments && payload.extra && !/^!song\s*/i.test(String(payload.extra))){
+      // Read ONLY the comment text; username is intentionally excluded.
+      queueLiveTts(payload.extra);
+    }
+    if(payload.type==='like' && currentTtsSettings().readLikes){
+      queueLiveTts(payload.count>1 ? `Ada ${payload.count} like masuk.` : 'Ada yang mengirim like.');
+    }
+    if(payload.type==='follow'){
+      playLiveSfx('follow');
+      if(currentTtsSettings().readFollows===true) queueLiveTts('Ada yang baru follow.');
+    }
+    if(payload.type==='gift'){
+      playLiveSfx('gift');
+      if(currentTtsSettings().readGifts===true){
+        const detail=payload.extra ? ` ${payload.extra}.` : '.';
+        queueLiveTts(`Ada gift masuk${detail}`);
+      }
+    }
+  });
+
+  function sendTts(){
+    const text = document.getElementById('ttsText').value.trim();
+    if(!text) return;
+    socket.emit('trigger', { kind:'tts', text });
+    logEvent(`TTS manual dikirim: "${text}"`);
+  }
+
+  function previewTts(){
+    const text = document.getElementById('ttsText').value.trim();
+    if(!text) return;
+    speakLocal(text);
+    ttsUnlocked = true;
+    logEvent('Preview TTS diputar di browser panel.');
+  }
+
+  // ---- Overlay preview/theme ----
+  function previewComment(){
+    const username = 'Penonton';
+    const extra = 'Halo! Ini contoh komentar live.';
+    socket.emit('trigger', { kind:'alert', type:'comment', username, extra });
+    logEvent('Preview komentar dikirim ke overlay.');
+  }
+
+  let chatStyleSettings = { style:'glass-card', gap:16 };
+  function applyChatStyleUI(){
+    document.querySelectorAll('.chat-style-card').forEach(el => el.classList.toggle('active', el.dataset.chatStyle === chatStyleSettings.style));
+    document.getElementById('chatGap').value = chatStyleSettings.gap;
+    document.getElementById('chatGapValue').textContent = chatStyleSettings.gap + 'px';
+    document.getElementById('chatStyleStatus').textContent = ({'glass-card':'Glass Card','pill':'Pill Bubble','speech':'Speech Bubble','stacked':'Stacked','neon-line':'Neon Line','compact':'Compact'}[chatStyleSettings.style] || 'Glass Card') + ' · ' + chatStyleSettings.gap + 'px';
+  }
+  function setChatStyle(style){ chatStyleSettings.style=style; applyChatStyleUI(); socket.emit('overlay:settings',{ chat:chatStyleSettings }); }
+  function setChatGap(value){ chatStyleSettings.gap=Number(value)||16; applyChatStyleUI(); socket.emit('overlay:settings',{ chat:chatStyleSettings }); }
+  function saveChatStyle(){ socket.emit('overlay:settings',{ chat:chatStyleSettings }); logEvent(`Style chat disimpan: ${chatStyleSettings.style}, gap ${chatStyleSettings.gap}px`); }
+
+  function setTheme(theme){
+    document.querySelectorAll('.theme-card').forEach(el => el.classList.toggle('active', el.dataset.theme === theme));
+    socket.emit('overlay:settings', { theme });
+    logEvent(`Tema overlay diubah: ${theme}`);
+  }
+
+  socket.on('overlay:settings', (settings) => {
+    const theme = settings && settings.theme ? settings.theme : 'glass';
+    document.querySelectorAll('.theme-card').forEach(el => el.classList.toggle('active', el.dataset.theme === theme));
+    if(settings && settings.chat){ chatStyleSettings = { ...chatStyleSettings, ...settings.chat }; applyChatStyleUI(); }
+  });
+
+  // ---- Dashboard / analytics ----
+  socket.on('stats:update', (stats) => {
+    document.getElementById('statComments').textContent = stats.comments || 0;
+    document.getElementById('statLikes').textContent = stats.likes || 0;
+    document.getElementById('statFollows').textContent = stats.follows || 0;
+    document.getElementById('statGifts').textContent = stats.gifts || 0;
+    document.getElementById('lastEventAt').textContent = stats.lastEventAt ? new Date(stats.lastEventAt).toLocaleTimeString('id-ID') : '-';
+  });
+  socket.on('stats:update', stats => {
+    if(stats) logEvent(`Statistik diperbarui: komentar ${stats.comments||0}, like ${stats.likes||0}, follow ${stats.follows||0}, gift ${stats.gifts||0}`);
+  });
+  function resetStats(){ socket.emit('stats:reset'); logEvent('Statistik sesi di-reset.'); }
+  function saveGoal(){
+    socket.emit('goal:save', {
+      enabled: document.getElementById('goalEnabled').checked,
+      title: document.getElementById('goalTitle').value || 'Live Goal',
+      type: document.getElementById('goalType').value,
+      current: Number(document.getElementById('goalCurrent').value || 0),
+      target: Number(document.getElementById('goalTarget').value || 1000)
+    });
+    logEvent('Goal disimpan.');
+  }
+  socket.on('goal:update', goal => {
+    if(!goal) return;
+    document.getElementById('goalEnabled').checked = !!goal.enabled;
+    document.getElementById('goalTitle').value = goal.title || 'Live Goal';
+    document.getElementById('goalType').value = goal.type || 'likes';
+    document.getElementById('goalCurrent').value = goal.current || 0;
+    document.getElementById('goalTarget').value = goal.target || 1000;
+  });
+
+  // ---- Custom actions ----
+  let actionRules = [];
+  function addAction(){
+    actionRules.push({id: Math.random().toString(36).slice(2,9), enabled:true, event:'comment', keyword:'', action:'tts', value:'Terima kasih {username}!' });
+    renderActions();
+  }
+  function renderActions(){
+    const root = document.getElementById('actionList');
+    root.innerHTML = '';
+    if(!actionRules.length){
+      root.innerHTML = '<div class="hint">Belum ada rule. Klik "+ Tambah Event".</div>';
+      return;
+    }
+    actionRules.forEach((a, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'field';
+      wrap.style.marginTop = '12px';
+      wrap.innerHTML = `
+        <div class="row" style="gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;"><input type="checkbox" data-i="${i}" data-k="enabled" ${a.enabled?'checked':''}> ON</label>
+          <select data-i="${i}" data-k="event" style="width:130px;">
+            <option value="comment" ${a.event==='comment'?'selected':''}>Komentar</option>
+            <option value="like" ${a.event==='like'?'selected':''}>Like</option>
+            <option value="follow" ${a.event==='follow'?'selected':''}>Follow</option>
+            <option value="gift" ${a.event==='gift'?'selected':''}>Gift</option>
+          </select>
+          <input data-i="${i}" data-k="keyword" value="${escapeHtml(a.keyword)}" placeholder="keyword (kosong = semua)" style="flex:1;min-width:150px;">
+          <select data-i="${i}" data-k="action" style="width:120px;">
+            <option value="tts" ${a.action==='tts'?'selected':''}>TTS</option>
+            <option value="alert" ${a.action==='alert'?'selected':''}>Alert</option>
+            <option value="sound" ${a.action==='sound'?'selected':''}>Sound</option>
+          </select>
+          <input data-i="${i}" data-k="value" value="${escapeHtml(a.value)}" placeholder="aksi / teks / sound id" style="flex:2;min-width:200px;">
+          <button class="btn" data-remove="${i}">Hapus</button>
+        </div>`;
+      root.appendChild(wrap);
+    });
+    root.querySelectorAll('[data-i][data-k]').forEach(el => el.addEventListener('input', () => {
+      const i = Number(el.dataset.i), k = el.dataset.k;
+      actionRules[i][k] = el.type === 'checkbox' ? el.checked : el.value;
+    }));
+    root.querySelectorAll('[data-remove]').forEach(el => el.addEventListener('click', () => {
+      actionRules.splice(Number(el.dataset.remove), 1); renderActions();
+    }));
+  }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function saveActions(){
+    socket.emit('actions:save', actionRules);
+    logEvent(`${actionRules.length} custom action rules disimpan.`);
+  }
+  socket.on('actions:list', actions => { actionRules = Array.isArray(actions) ? actions : []; renderActions(); });
+
+  // ---- Follow/Gift animation settings ----
+  let animationSettings = { enabled:true, followStyle:'wings', giftStyle:'treasure', followDuration:4, giftDuration:5, position:'top-center' };
+  function renderAnimationSettings(){
+    document.getElementById('animEnabled').checked = animationSettings.enabled !== false;
+    document.getElementById('followAnimStyle').value = animationSettings.followStyle || 'wings';
+    document.getElementById('giftAnimStyle').value = animationSettings.giftStyle || 'treasure';
+    document.getElementById('followAnimDuration').value = animationSettings.followDuration || 4;
+    document.getElementById('giftAnimDuration').value = animationSettings.giftDuration || 5;
+    document.getElementById('animPosition').value = animationSettings.position || 'top-center';
+  }
+  function saveAnimationSettings(){
+    animationSettings = {
+      enabled: document.getElementById('animEnabled').checked,
+      followStyle: document.getElementById('followAnimStyle').value,
+      giftStyle: document.getElementById('giftAnimStyle').value,
+      followDuration: Math.max(2, Math.min(10, Number(document.getElementById('followAnimDuration').value)||4)),
+      giftDuration: Math.max(2, Math.min(10, Number(document.getElementById('giftAnimDuration').value)||5)),
+      position: document.getElementById('animPosition').value,
+    };
+    socket.emit('overlay:settings', { theme: currentTheme, animations: animationSettings });
+    document.getElementById('animStatus').textContent = 'Animasi tersimpan ✓';
+  }
+  function testAnimation(type){
+    const username = document.getElementById('simUsername')?.value || 'user123';
+    const extra = type === 'gift' ? 'Rose x5' : 'Baru saja follow!';
+    socket.emit('trigger', {kind:'alert', type, username, extra, count:1});
+    logEvent(`Test animasi ${type}: @${username}`);
+  }
+  socket.on('overlay:settings', settings => {
+    animationSettings = { ...animationSettings, ...(settings?.animations || {}) };
+    renderAnimationSettings();
+  });
+
+  // ---- Music Request ----
+  function copyMusicUrl(){ navigator.clipboard?.writeText(document.getElementById('musicUrl').textContent); logEvent('URL Music Request disalin.'); }
+  function renderMusic(state){
+    state=state||{}; const c=state.current; const q=Array.isArray(state.queue)?state.queue:[];
+    document.getElementById('musicCurrentTitle').textContent=c?.title||'Belum ada lagu';
+    document.getElementById('musicCurrentBy').textContent=c?`@${c.requestedBy||'Penonton'} · ${c.duration||''}`:'-';
+    document.getElementById('musicQueueCount').textContent=q.length;
+    const root=document.getElementById('musicQueueList');
+    root.innerHTML=q.length?q.map((x,i)=>`<div>${i+1}. <b>${escapeHtml(x.title||'Lagu')}</b> — @${escapeHtml(x.requestedBy||'Penonton')}</div>`).join(''):'<div>Belum ada antrian.</div>';
+  }
+  socket.on('music:update',renderMusic);
+  socket.on('music:request-result',r=>{ logEvent(r?.ok?`Music request masuk: ${r.item?.title||'Lagu'}`:`Music request gagal: ${r?.message||'error'}`); });
+  socket.on('event',p=>{ if(p?.kind==='music-request') logEvent(`🎵 @${p.username||'Penonton'} request: ${p.extra||''}`); if(p?.kind==='music-request-error') logEvent(`🎵 Request ditolak @${p.username||'Penonton'}: ${p.extra||''}`); });
+  function musicSkip(){socket.emit('music:skip');logEvent('Music: skip.');}
+  function musicClear(){socket.emit('music:clear');logEvent('Music: queue dihapus.');}
+  function musicStop(){socket.emit('music:stop');logEvent('Music: stop dan queue dihapus.');}
+  function testMusicRequest(){const q=document.getElementById('musicTestQuery').value.trim();if(!q)return;socket.emit('music:request',{username:'PenontonDemo',query:q});}
+
+  // ---- Simulator ----
+  function simulateTtsComment(){const username=document.getElementById('simUsername').value||'PenontonDemo';const comment=document.getElementById('simComment').value||'halo, tes TTS!';socket.emit('trigger',{kind:'alert',type:'comment',username,extra:comment});logEvent('Tes Chat + TTS dikirim ke Browser Source ALERT + TTS. Pastikan audio Browser Source tidak di-mute.');}
+  function cp(id){navigator.clipboard?.writeText(document.getElementById(id).textContent);logEvent('URL Browser Source disalin.');}
+  const baseUrl=location.origin;setTimeout(()=>{document.getElementById('srcChat').textContent=baseUrl+'/overlay-comments.html?v=27';document.getElementById('srcFollowGift').textContent=baseUrl+'/overlay-follow-gift.html?v=27';document.getElementById('srcGoal').textContent=baseUrl+'/overlay-goal.html?v=27';document.getElementById('srcAlert').textContent=baseUrl+'/overlay.html?v=27';document.getElementById('srcTts').textContent=baseUrl+'/overlay-tts.html?v=27';document.getElementById('musicUrl').textContent=baseUrl+'/overlay-music.html?v=27';},0);
+
+  function simulateEvent(type){
+    const username = document.getElementById('simUsername').value || 'PenontonDemo';
+    const comment = document.getElementById('simComment').value || 'halo, tes overlay!';
+    const extra = type === 'comment' ? comment : type === 'gift' ? 'Rose x1' : '';
+    socket.emit('trigger', {kind:'alert', type, username, extra, count:type==='like'?5:1});
+    logEvent(`Simulator: ${type} dari ${username}`);
+  }
+
+  function simulateLikeLeaderboard(){
+    const username = document.getElementById('simUsername').value || 'PenontonDemo';
+    const count = Math.max(1, Number(document.getElementById('simLikeCount').value) || 1);
+    socket.emit('trigger', {kind:'like-sim', username, count});
+    logEvent(`Simulator leaderboard: ${username} +${count} like.`);
+  }
+
+  function resetSimLeaderboard(){
+    socket.emit('trigger', {kind:'leaderboard-reset'});
+    logEvent('Simulator leaderboard di-reset.');
+  }
+
+  renderAnimationSettings();
+  socket.emit('stats:get');
+  socket.emit('goal:get');
+  socket.emit('actions:get');
+</script>
+</body>
+</html>
