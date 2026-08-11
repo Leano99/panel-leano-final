@@ -19,7 +19,7 @@ const tiktok = setupTiktok(io, processEvent);
 // fire very rapidly and would spam the TTS.
 let ttsSettings = {
   readComments: true,
-  readLikes: true,
+  readLikes: false,
   // Follow/Gift use custom SFX by default, not TTS.
   readFollows: false,
   readGifts: false,
@@ -184,6 +184,8 @@ let customActions = [
 ];
 
 io.on("connection", (socket) => {
+  // Socket.IO connection is not the same as TikTok Live connection.
+  socket.emit("tiktok:status", tiktok.getStatus());
   // Send nothing on connect - overlay starts clean every time it's (re)loaded in OBS
   socket.on("trigger", (payload) => {
     processEvent(payload, { source: "manual" });

@@ -7,6 +7,7 @@ const Connector = TikTokLiveConnection || WebcastPushConnection;
 let likeCounts = {}; // { username: totalLikesThisSession }
 let currentConnection = null;
 let currentUsername = null;
+let currentConnected = false;
 let acceptingLiveEvents = false;
 const LEADERBOARD_REFRESH_MS = 15000;
 let leaderboardTimer = null;
@@ -68,6 +69,7 @@ function setupTiktok(io, processEvent) {
           currentConnection = null;
         }
         acceptingLiveEvents = false;
+        currentConnected = false;
         resetLeaderboardBroadcast();
         likeCounts = {};
         broadcastLeaderboardNow();
@@ -84,11 +86,13 @@ function setupTiktok(io, processEvent) {
             // Only events arriving after the connection is fully established
             // belong to this session. Anything emitted while connecting is ignored.
             acceptingLiveEvents = true;
+            currentConnected = true;
             io.emit("tiktok:status", { connected: true, username, roomId: state.roomId });
             resolve(state);
           })
           .catch((err) => {
             currentConnection = null;
+            currentConnected = false;
             const message = err && err.message ? err.message : String(err);
             io.emit("tiktok:status", { connected: false, username, error: message });
             reject(err);
@@ -149,18 +153,23 @@ function setupTiktok(io, processEvent) {
 
         connection.on("streamEnd", () => {
           acceptingLiveEvents = false;
+          currentConnected = false;
+          currentConnection = null;
           io.emit("tiktok:status", { connected: false, username, error: "Live sudah berakhir." });
           currentConnection = null;
         });
 
         connection.on("disconnected", () => {
           acceptingLiveEvents = false;
+          currentConnected = false;
+          currentConnection = null;
           io.emit("tiktok:status", { connected: false, username });
         });
       } catch (err) {
         acceptingLiveEvents = false;
         // synchronous construction errors (e.g. bad options, library mismatch) land here
         currentConnection = null;
+        currentConnected = false;
         const message = err && err.message ? err.message : String(err);
         io.emit("tiktok:status", { connected: false, username, error: message });
         reject(err);
@@ -170,6 +179,7 @@ function setupTiktok(io, processEvent) {
 
   function disconnect() {
     acceptingLiveEvents = false;
+    currentConnected = false;
     resetLeaderboardBroadcast();
     if (currentConnection) {
       currentConnection.disconnect();
@@ -178,7 +188,11 @@ function setupTiktok(io, processEvent) {
     io.emit("tiktok:status", { connected: false, username: currentUsername });
   }
 
-  return { connect, disconnect, leaderboardTop };
+  function getStatus() {
+    return { connected: currentConnected, username: currentUsername };
+  }
+
+  return { connect, disconnect, leaderboardTop, getStatus };
 }
 
 module.exports = { setupTiktok };
