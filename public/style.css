@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 :root{
   --bg: #0A0D14;
   --panel: #131826;
@@ -251,9 +249,16 @@ nav.tabs.app-tabs button.active::after{
 .field input[type=number]{
   border-color:#2a3550;
   background:#0e1320;
+  color: var(--text);
   border-radius:10px;
   outline:none;
   transition:border-color .15s, box-shadow .15s;
+}
+.field input[type=text]::placeholder,
+.field input[type=number]::placeholder,
+.field textarea::placeholder{
+  color: var(--muted);
+  opacity: 1;
 }
 .field input[type=text]:focus,
 .field textarea:focus,
