@@ -378,8 +378,7 @@ function processEvent(payload = {}, meta = {}) {
     streamStats.lastEventAt = Date.now();
     streamStats.likes += count;
     if (goalSettings.enabled && goalSettings.type === "likes") goalSettings.current += count;
-    io.emit("goal:update", goalSettings);
-    io.emit("stats:update", streamStats);
+    scheduleLiveStateBroadcast();
     return;
   }
 
@@ -429,7 +428,7 @@ function processEvent(payload = {}, meta = {}) {
       if (key === "comments" && payload.type === "comment") goalSettings.current += 1;
       if (key === "likes" && payload.type === "like") goalSettings.current += Number(payload.count || 1);
       if (key === "gifts" && payload.type === "gift") goalSettings.current += 1;
-      io.emit("goal:update", goalSettings);
+      if (payload.type !== "like") io.emit("goal:update", goalSettings);
     }
 
     io.emit("event", payload);
@@ -438,7 +437,8 @@ function processEvent(payload = {}, meta = {}) {
     io.emit("event", payload);
   }
 
-  io.emit("stats:update", streamStats);
+  if (payload.type === "like") scheduleLiveStateBroadcast();
+  else io.emit("stats:update", streamStats);
 }
 
 function getLocalIp() {

@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <title>Leaderboard Like — Overlay</title>
-<link rel="stylesheet" href="style.css" />
+<style>
+:root{
+  --line:#232B3D;--text:#EDEFF5;--muted:#8792A8;--panel-2:#171E2E;
+  --gold:#F2B807;--violet:#8B6BF2;
+}
+</style>
 <style>
   html, body{ background: transparent; overflow: hidden; width: 100vw; height: 100vh; }
 
@@ -19,13 +24,7 @@
   .head{
     display:flex; align-items:center; gap:10px; margin-bottom: 6px;
     padding: 0 4px;
-  }
-  .head .dot{ width:7px; height:7px; border-radius:50%; background: var(--gold); box-shadow: 0 0 0 0 rgba(242,184,7,.6); animation: pulse 1.8s infinite; }
-  @keyframes pulse{
-    0%{ box-shadow: 0 0 0 0 rgba(242,184,7,.55); }
-    70%{ box-shadow: 0 0 0 8px rgba(242,184,7,0); }
-    100%{ box-shadow: 0 0 0 0 rgba(242,184,7,0); }
-  }
+  } .head .dot{ width:7px;height:7px;border-radius:50%;background:var(--gold); }
   .head span{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:2.5px; color: var(--muted); text-transform: uppercase; }
 
   .row{
@@ -35,24 +34,14 @@
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 10px 14px;
-    opacity: 0; transform: translateX(24px);
-    animation: rowIn .4s cubic-bezier(.2,.9,.25,1) forwards;
+    opacity: 1; transform: none;
     overflow: hidden;
-  }
-  @keyframes rowIn{ to{ opacity: 1; transform: translateX(0); } }
+  } }
 
   .row.rank-1{
     padding: 14px 16px;
     border: 1px solid rgba(242,184,7,.55);
-    box-shadow: 0 0 0 1px rgba(242,184,7,.12), 0 10px 30px rgba(242,184,7,.1);
-  }
-  .row.rank-1::after{
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background: linear-gradient(100deg, transparent 30%, rgba(242,184,7,.10) 50%, transparent 70%);
-    background-size: 200% 100%;
-    animation: shine 2.8s ease-in-out infinite;
-  }
-  @keyframes shine{ 0%{ background-position: 200% 0; } 100%{ background-position: -50% 0; } }
+    box-shadow: 0 4px 12px rgba(0,0,0,.16);}
 
   .medal{
     flex-shrink:0; width:30px; height:30px; border-radius:50%;
@@ -92,7 +81,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  const socket = io();
+  const socket = io({ transports: ['websocket'] });
   const board = document.getElementById('board');
   const rowsEl = document.getElementById('rows');
   const prevCounts = {}; // for count-up animation between updates

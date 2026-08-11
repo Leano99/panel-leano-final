@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <title>Overlay Siaran</title>
-<link rel="stylesheet" href="style.css" />
+<style>
+:root{
+  --bg:#0A0D14;--panel:#131826;--panel-2:#171E2E;--line:#232B3D;
+  --text:#EDEFF5;--muted:#8792A8;--gold:#F2B807;--cyan:#34D6C4;
+  --magenta:#F23D6D;--violet:#8B6BF2;
+}
+</style>
 <style>
   html, body{ background: transparent; overflow: hidden; width: 100vw; height: 100vh; }
   body.theme-neon{ --overlay-bg1: rgba(9,12,25,.94); --overlay-bg2: rgba(20,15,45,.94); --overlay-line: rgba(139,107,242,.55); }
@@ -12,7 +18,7 @@
   body.theme-pink{ --overlay-bg1: rgba(35,10,25,.94); --overlay-bg2: rgba(50,14,38,.94); --overlay-line: rgba(242,61,109,.5); }
   body.theme-glass{ --overlay-bg1: rgba(19,24,38,.92); --overlay-bg2: rgba(23,30,46,.92); --overlay-line: var(--line); }
 
-  #stage{
+  #stage{contain:layout paint;
     position: fixed; left: 0; bottom: 40px; width: 100%;
     display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
     padding-left: 40px;
@@ -21,30 +27,15 @@
   .card{
     position: relative;
     display: flex; align-items: center; gap: 14px;
-    background: linear-gradient(100deg, var(--overlay-bg1, rgba(19,24,38,.92)), var(--overlay-bg2, rgba(23,30,46,.92)));
+    background: var(--overlay-bg1, rgba(19,24,38,.94));
     border: 1px solid var(--overlay-line, var(--line));
     border-left: 4px solid var(--accent);
     border-radius: 10px;
     padding: 14px 22px 14px 18px;
     min-width: 320px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.45);
-    transform: translateX(-120%);
-    animation: slidein .45s cubic-bezier(.2,.9,.25,1) forwards;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    transform: none;
     overflow: hidden;
-  }
-  .card::after{
-    /* signature scan sweep */
-    content:""; position:absolute; top:0; bottom:0; width:60px; left:-60px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
-    animation: sweep 1.1s ease-out .35s 1;
-  }
-  @keyframes sweep{ to{ left: 120%; } }
-  @keyframes slidein{ to{ transform: translateX(0); } }
-  @keyframes slideout{ to{ transform: translateX(-130%); opacity: 0; } }
-
-  .card .tag{
-    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; color: var(--accent);
-    text-transform: uppercase;
   }
   .card .main{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; margin-top:3px; }
   .card .main b{ color: var(--accent); }
@@ -58,19 +49,19 @@
   }
 
   /* Follow/Gift animated notifications */
-  #eventFx{ position:fixed; inset:0; pointer-events:none; z-index:50; }
+  #eventFx{contain:layout paint; position:fixed; inset:0; pointer-events:none; z-index:50; }
   #eventFx.pos-top-center{ display:flex; align-items:flex-start; justify-content:center; padding-top:70px; }
   #eventFx.pos-center{ display:flex; align-items:center; justify-content:center; }
   #eventFx.pos-bottom-center{ display:flex; align-items:flex-end; justify-content:center; padding-bottom:110px; }
-  .fx-card{ position:relative; min-width:390px; max-width:min(680px,80vw); padding:14px 24px; border-radius:22px; display:flex; align-items:center; gap:16px; color:#fff; overflow:hidden; transform:translateY(-18px) scale(.88); opacity:0; box-shadow:0 16px 60px rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.22); }
+  .fx-card{ position:relative; min-width:390px; max-width:min(680px,80vw); padding:14px 24px; border-radius:22px; display:flex; align-items:center; gap:16px; color:#fff; overflow:hidden; transform:translateY(-18px) scale(.88); opacity:0; box-shadow:0 2px 8px rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.22); }
   .fx-card.enter{ animation:fxEnter .55s cubic-bezier(.16,1,.3,1) forwards; }
   .fx-card.leave{ animation:fxLeave .65s ease forwards; }
-  .fx-avatar{ width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font-size:28px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.7);box-shadow:0 0 24px rgba(255,255,255,.25); }
+  .fx-avatar{ width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;font-size:28px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.7);box-shadow:none; }
   .fx-text{ min-width:0; text-align:left; }
   .fx-kicker{ font:800 11px Inter,sans-serif; letter-spacing:2px; text-transform:uppercase; opacity:.9; }
   .fx-user{ font:900 22px 'Space Grotesk',sans-serif; margin-top:2px; text-shadow:0 3px 14px rgba(0,0,0,.35); }
   .fx-sub{ font:700 13px Inter,sans-serif; opacity:.95; margin-top:3px; }
-  .fx-particle{ position:absolute; width:8px;height:8px;border-radius:50%; background:#fff; box-shadow:0 0 16px currentColor; opacity:.9; animation:particle 1.8s ease-in-out infinite; }
+.fx-particle{display:none}
   .fx-particle.p1{left:8%;top:20%;color:#25d9ff}.fx-particle.p2{left:23%;bottom:15%;color:#ff4fb3;animation-delay:.25s}.fx-particle.p3{right:17%;top:16%;color:#ffd44d;animation-delay:.5s}.fx-particle.p4{right:6%;bottom:22%;color:#8b6bf2;animation-delay:.8s}
   .fx-wings{ background:linear-gradient(110deg,#0c1535,#322067 48%,#071c3d); border-color:#25d9ff; }
   .fx-wings::before{ content:'✦  ♡  ✦'; position:absolute; inset:0; display:flex;align-items:center;justify-content:space-around; font-size:34px; color:#25d9ff; opacity:.16; }
@@ -83,12 +74,11 @@
   .fx-rose{ background:linear-gradient(110deg,#4d071d,#c41f62 48%,#5a0a38); border-color:#ff76b7; box-shadow:0 0 48px rgba(255,77,165,.3),0 16px 60px rgba(0,0,0,.45); }
   .fx-universe{ background:radial-gradient(circle at 80% 50%,#5c32d8,#151044 42%,#050718 85%); border-color:#9b8cff; box-shadow:0 0 52px rgba(139,107,242,.36),0 16px 60px rgba(0,0,0,.45); }
   @keyframes fxEnter{ 0%{opacity:0;transform:translateY(-28px) scale(.82)} 70%{opacity:1;transform:translateY(5px) scale(1.035)} 100%{opacity:1;transform:translateY(0) scale(1)} }
-  @keyframes fxLeave{ to{opacity:0;transform:translateY(-16px) scale(.96);filter:blur(4px)} }
-  @keyframes particle{ 0%,100%{transform:translateY(0) scale(.7);opacity:.25} 50%{transform:translateY(-16px) scale(1.2);opacity:1} }
+  @keyframes fxLeave{to{opacity:0;transform:translateY(-10px) scale(.99)}} } 50%{transform:translateY(-16px) scale(1.2);opacity:1} }
 
   #ttsBubble{
     position: fixed; left: 40px; top: 40px; max-width: 480px;
-    background: linear-gradient(100deg, var(--overlay-bg1, rgba(19,24,38,.92)), var(--overlay-bg2, rgba(23,30,46,.92)));
+    background: var(--overlay-bg1, rgba(19,24,38,.94));
     border: 1px solid var(--overlay-line, var(--line)); border-left: 4px solid var(--violet);
     border-radius: 10px; padding: 14px 20px; display:none;
     font-family:'Inter',sans-serif; font-size:15px; color: var(--text);
@@ -110,7 +100,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  const socket = io();
+  const socket = io({ transports: ['websocket'] });
   const stage = document.getElementById('stage');
 
   const MAX_COMMENT_CARDS = 8;
@@ -235,7 +225,7 @@
     const kicker = type === 'follow' ? 'NEW FOLLOWER' : 'GIFT MASUK';
     card.innerHTML = `<span class="fx-particle p1"></span><span class="fx-particle p2"></span><span class="fx-particle p3"></span><span class="fx-particle p4"></span><div class="fx-avatar">${icon}</div><div class="fx-text"><div class="fx-kicker">${kicker}</div><div class="fx-user">@${safeUser}</div><div class="fx-sub">${safeExtra}</div></div>`;
     eventFx.appendChild(card);
-    requestAnimationFrame(() => card.classList.add('enter'));
+    card.classList.add('enter');
     const stay = Math.max(2, Math.min(10, duration)) * 1000;
     setTimeout(() => { card.classList.remove('enter'); card.classList.add('leave'); setTimeout(() => card.remove(), 700); }, Math.max(1200, stay - 700));
   }
@@ -406,15 +396,6 @@
     }
   }
 
-  // Keep Chromium's speech engine alive while the overlay is open.
-  setInterval(() => {
-    try {
-      if(speechSynthesis.paused) speechSynthesis.resume();
-      if(ttsQueue.length && !ttsBusy) processTtsQueue();
-      ensureVoices();
-    } catch(e) {}
-  }, 1000);
-
   speechSynthesis.onvoiceschanged = () => { ensureVoices(); };
 
   // A browser-source page can still be subject to Chromium's autoplay/audio
@@ -427,7 +408,7 @@
 
   // Try once automatically on load. This works in OBS builds that do not
   // enforce a user-gesture requirement for Browser Source speech.
-  setTimeout(primeTts, 300);
+  // TTS is primed only after an explicit browser interaction.
 
 </script>
 </body>
