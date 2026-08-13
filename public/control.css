@@ -800,19 +800,3 @@ header.deck{display:none!important}
 
 .v38-icon-btn{width:38px;height:38px;border:1px solid #252950;border-radius:12px;background:#0b0d1d;color:#c8c7e6;font-size:17px;cursor:pointer;display:grid;place-items:center;transition:.16s}.v38-icon-btn:hover{border-color:#6255bb;background:#12152c;color:#fff;box-shadow:0 0 18px rgba(99,77,255,.13)}
 @media(max-width:700px){.v38-icon-btn{display:none}}
-
-
-/* === SCROLL FIX V3 (SAFE) === */
-
-/* jangan kunci scroll global */
-body {
-  overflow: auto !important;
-}
-
-/* sidebar punya scroll sendiri */
-.sidebar {
-  overflow-y: auto !important;
-  overflow-x: hidden;
-  height: 100vh;
-  overscroll-behavior: contain;
-}
