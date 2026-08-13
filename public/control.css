@@ -802,28 +802,17 @@ header.deck{display:none!important}
 @media(max-width:700px){.v38-icon-btn{display:none}}
 
 
-/* === FINAL SCROLL FIX (SIDEBAR + MAIN CONTENT) === */
+/* === SCROLL FIX V3 (SAFE) === */
 
-/* reset body */
+/* jangan kunci scroll global */
 body {
-  margin: 0;
+  overflow: auto !important;
 }
 
-/* sidebar scroll */
+/* sidebar punya scroll sendiri */
 .sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-
   overflow-y: auto !important;
   overflow-x: hidden;
-  overscroll-behavior: contain;
-}
-
-/* main content scroll */
-.main-content, .content, .app, .app-content {
-  margin-left: 260px;
   height: 100vh;
-  overflow-y: auto;
+  overscroll-behavior: contain;
 }
