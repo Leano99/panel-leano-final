@@ -20,3 +20,6 @@ Catatan:
 
 
 VOLUME: atur VOLUME MUSIK CHROME di tab Music Request pada control panel. Atur VOLUME GOOGLE TTS di tab Text-to-Speech.
+
+
+Catatan v43+: Chrome Music Player meminta kualitas YouTube tiny/144p. YouTube tetap dapat mengubah kualitas secara adaptif; 144p adalah target yang diminta, bukan jaminan dari API. OBS MUSIC REQUEST hanya visual.

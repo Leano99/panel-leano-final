@@ -70,7 +70,8 @@ window.onYouTubeIframeAPIReady = function() {
       autoplay: 0,
       controls: 1,
       rel: 0,
-      playsinline: 1
+      playsinline: 1,
+      modestbranding: 1
     },
     events: {
       onReady: function() {
@@ -78,7 +79,8 @@ window.onYouTubeIframeAPIReady = function() {
       },
       onStateChange: function(e) {
         if (e.data === YT.PlayerState.PLAYING) {
-          setStatus('🔊 <b>Audio sedang dimainkan dari Chrome.</b>', 'ok');
+          try { player.setPlaybackQuality('tiny'); } catch(e) {}
+          setStatus('🔊 <b>Audio sedang dimainkan dari Chrome · target 144p.</b>', 'ok');
         }
         if (e.data === YT.PlayerState.ENDED && currentVideoId) {
           const id = currentVideoId;
@@ -118,8 +120,10 @@ function startItem(item) {
   try {
     player.loadVideoById({
       videoId: item.videoId,
-      startSeconds: 0
+      startSeconds: 0,
+      suggestedQuality: 'tiny'
     });
+    setTimeout(() => { try { player.setPlaybackQuality('tiny'); } catch(e) {} }, 1200);
     player.playVideo();
   } catch (err) {
     setStatus('❌ Gagal menjalankan player Chrome: ' + err.message, 'warn');
@@ -182,7 +186,8 @@ socket.on('connect', function() {
 });
 socket.on('music:settings', function(settings) {
   musicVolume = Math.max(0, Math.min(1, Number(settings?.volume ?? 0.75)));
-  if (player && apiReady) { try { player.setVolume(Math.round(musicVolume * 100)); } catch(e) {} }
+  if (player && apiReady) { try { player.setVolume(Math.round(musicVolume * 100)); } catch(e) {}
+  try { player.setPlaybackQuality('tiny'); } catch(e) {} }
 });
 socket.on('music:update', render);
 

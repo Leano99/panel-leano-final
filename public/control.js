@@ -66,8 +66,8 @@
   // comments overlay url
   const commentsUrl = location.origin + '/overlay-comments.html?v=27';
   document.getElementById('commentsUrl').textContent = commentsUrl;
-  const musicUrl = location.origin + '/overlay-music.html?v=31';
-  const musicPlayerUrl = location.origin + '/music-player.html?v=31';
+  const musicUrl = location.origin + '/overlay-music.html?v=32';
+  const musicPlayerUrl = location.origin + '/music-player.html?v=32';
   document.getElementById('musicUrl').textContent = musicUrl;
   function copyCommentsUrl(){
     navigator.clipboard.writeText(commentsUrl);
@@ -598,14 +598,14 @@
     chromeMusicApiReady=true;
     chromeMusicPlayer=new YT.Player('controlMusicPlayer',{
       width:'100%',height:'270',videoId:'',
-      playerVars:{autoplay:0,controls:1,rel:0,playsinline:1},
+      playerVars:{autoplay:0,controls:1,rel:0,playsinline:1,modestbranding:1},
       events:{
         onReady:function(){
-          try{ chromeMusicPlayer.setVolume(Math.round(chromeMusicVolume*100)); }catch(e){}
+          try{ chromeMusicPlayer.setVolume(Math.round(chromeMusicVolume*100)); try{ chromeMusicPlayer.setPlaybackQuality('tiny'); }catch(e){} }catch(e){}
           if(chromeMusicPending && chromeMusicActivated) playChromeMusic(chromeMusicPending);
         },
         onStateChange:function(e){
-          if(e.data===YT.PlayerState.PLAYING) setChromeMusicStatus('🔊 Musik sedang bunyi dari Chrome',true);
+          if(e.data===YT.PlayerState.PLAYING){ try{ chromeMusicPlayer.setPlaybackQuality('tiny'); }catch(e){} setChromeMusicStatus('🔊 Musik sedang bunyi dari Chrome · target 144p',true); }
           if(e.data===YT.PlayerState.ENDED && chromeMusicCurrentId){
             const id=chromeMusicCurrentId; chromeMusicCurrentId=null; socket.emit('music:ended',{videoId:id});
           }
@@ -634,7 +634,8 @@
     setChromeMusicStatus('⏳ Memutar: '+(item.title||'Lagu'));
     try{
       chromeMusicPlayer.setVolume(Math.round(chromeMusicVolume*100));
-      chromeMusicPlayer.loadVideoById({videoId:item.videoId,startSeconds:0});
+      chromeMusicPlayer.loadVideoById({videoId:item.videoId,startSeconds:0,suggestedQuality:'tiny'});
+      setTimeout(()=>{ try{ chromeMusicPlayer.setPlaybackQuality('tiny'); }catch(e){} }, 1200);
       chromeMusicPlayer.playVideo();
     }catch(e){ setChromeMusicStatus('❌ Gagal memulai audio Chrome'); }
   }
@@ -675,8 +676,8 @@
   // ---- Simulator ----
   function simulateTtsComment(){const username=document.getElementById('simUsername').value||'PenontonDemo';const comment=document.getElementById('simComment').value||'halo, tes TTS!';socket.emit('trigger',{kind:'alert',type:'comment',username,extra:comment});logEvent('Tes Chat + TTS dikirim ke Browser Source ALERT + TTS. Pastikan audio Browser Source tidak di-mute.');}
   function cp(id){navigator.clipboard?.writeText(document.getElementById(id).textContent);logEvent('URL Browser Source disalin.');}
-  const baseUrl=location.origin;setTimeout(()=>{document.getElementById('srcChat').textContent=baseUrl+'/overlay-comments.html?v=27';document.getElementById('srcFollowGift').textContent=baseUrl+'/overlay-follow-gift.html?v=27';document.getElementById('srcGoal').textContent=baseUrl+'/overlay-goal.html?v=27';document.getElementById('srcAlert').textContent=baseUrl+'/overlay.html?v=27';document.getElementById('srcTts').textContent=baseUrl+'/overlay-tts.html?v=27';document.getElementById('musicUrl').textContent=baseUrl+'/overlay-music.html?v=31';
-    if(document.getElementById('musicPlayerUrl')) document.getElementById('musicPlayerUrl').textContent=baseUrl+'/music-player.html?v=31';},0);
+  const baseUrl=location.origin;setTimeout(()=>{document.getElementById('srcChat').textContent=baseUrl+'/overlay-comments.html?v=27';document.getElementById('srcFollowGift').textContent=baseUrl+'/overlay-follow-gift.html?v=27';document.getElementById('srcGoal').textContent=baseUrl+'/overlay-goal.html?v=27';document.getElementById('srcAlert').textContent=baseUrl+'/overlay.html?v=27';document.getElementById('srcTts').textContent=baseUrl+'/overlay-tts.html?v=27';document.getElementById('musicUrl').textContent=baseUrl+'/overlay-music.html?v=32';
+    if(document.getElementById('musicPlayerUrl')) document.getElementById('musicPlayerUrl').textContent=baseUrl+'/music-player.html?v=32';},0);
 
   function simulateEvent(type){
     const username = document.getElementById('simUsername').value || 'PenontonDemo';

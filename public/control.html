@@ -102,12 +102,17 @@
         <button class="btn" onclick="copyCommentsUrl()">Salin URL</button>
         <span class="hint" style="margin:0;">→ Browser Source terpisah. Menampilkan 8 komentar terbaru secara vertikal.</span>
       </div>
-      <div class="url-box" style="margin-bottom:0;">
+      <div class="url-box" style="margin-bottom:10px;">
         <b style="min-width:180px;">OBS: MUSIC REQUEST</b>
         <code id="musicUrl">memuat...</code>
-      <div style="margin-top:8px"><b>CHROME: MUSIC PLAYER</b> <code id="musicPlayerUrl">memuat...</code> <button type="button" onclick="copyMusicPlayerUrl()">Copy</button><span class="hint"> → buka di Chrome; halaman ini yang mengeluarkan audio.</span></div>
         <button class="btn" onclick="copyMusicUrl()">Salin URL</button>
-        <span class="hint" style="margin:0;">→ Browser Source musik + jumlah antrian request.</span>
+        <span class="hint" style="margin:0;">→ Browser Source visual saja: lagu aktif + jumlah antrian.</span>
+      </div>
+      <div class="url-box" style="margin-bottom:0;">
+        <b style="min-width:180px;">CHROME: MUSIC PLAYER</b>
+        <code id="musicPlayerUrl">memuat...</code>
+        <button class="btn" type="button" onclick="copyMusicPlayerUrl()">Salin URL</button>
+        <span class="hint" style="margin:0;">→ Buka di Chrome. Ini yang memainkan audio musik.</span>
       </div>
     </div>
   </section>
