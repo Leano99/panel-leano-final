@@ -165,6 +165,25 @@ function musicNext() {
   broadcastMusic();
 }
 
+// Likes can arrive very rapidly (real TikTok likes or the leaderboard
+// simulator). Debounce the stats/goal broadcast instead of firing on every
+// single like so we don't flood all connected sockets (OBS overlays,
+// control panel, music player) with updates.
+// NOTE: this function was previously missing entirely, which caused an
+// uncaught ReferenceError inside processEvent() any time a "like" event or
+// the leaderboard simulator ran — crashing the whole Node server and
+// dropping every connected socket (OBS overlays going blank, music
+// playback stopping and losing its in-memory queue/progress on restart).
+let liveStateBroadcastTimer = null;
+function scheduleLiveStateBroadcast() {
+  if (liveStateBroadcastTimer) return;
+  liveStateBroadcastTimer = setTimeout(() => {
+    liveStateBroadcastTimer = null;
+    io.emit("stats:update", streamStats);
+    io.emit("goal:update", goalSettings);
+  }, 250);
+}
+
 let customActions = [
   {
     id: "follow-sfx",
