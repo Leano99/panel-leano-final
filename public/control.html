@@ -105,6 +105,7 @@
       <div class="url-box" style="margin-bottom:0;">
         <b style="min-width:180px;">OBS: MUSIC REQUEST</b>
         <code id="musicUrl">memuat...</code>
+      <div style="margin-top:8px"><b>CHROME: MUSIC PLAYER</b> <code id="musicPlayerUrl">memuat...</code> <button type="button" onclick="copyMusicPlayerUrl()">Copy</button><span class="hint"> → buka di Chrome; halaman ini yang mengeluarkan audio.</span></div>
         <button class="btn" onclick="copyMusicUrl()">Salin URL</button>
         <span class="hint" style="margin:0;">→ Browser Source musik + jumlah antrian request.</span>
       </div>
@@ -401,6 +402,11 @@
         <input type="range" id="ttsPitch" min="0.5" max="1.5" step="0.05" value="1" oninput="updateTtsSettings()">
         <div class="voice-status"><span id="ttsPitchValue">1.00</span></div>
       </div>
+      <div class="field" style="flex:1; min-width:220px; margin:0;">
+        <label>VOLUME GOOGLE TTS</label>
+        <input type="range" id="ttsVolume" min="0" max="100" step="1" value="100" oninput="updateTtsSettings()">
+        <div class="voice-status"><span id="ttsVolumeValue">100%</span></div>
+      </div>
     </div>
 
     <div class="field" style="margin-top:24px; border-top:1px solid var(--line); padding-top:20px;">
@@ -433,6 +439,12 @@
         <button class="btn" onclick="musicSkip()">⏭ Skip Lagu</button>
         <button class="btn" onclick="musicClear()">🗑 Clear Queue</button>
         <button class="btn" onclick="musicStop()">⏹ Stop Music</button>
+      </div>
+      <div class="field" style="margin-top:16px;">
+        <label>VOLUME MUSIK CHROME</label>
+        <input type="range" id="musicVolume" min="0" max="100" step="1" value="75" oninput="updateMusicVolume()">
+        <div class="voice-status"><span id="musicVolumeValue">75%</span></div>
+        <p class="hint">Mengatur volume YouTube di halaman <b>CHROME: MUSIC PLAYER</b>. Ini tidak mengubah volume TTS.</p>
       </div>
       <div class="field" style="margin-top:16px;">
         <label>TEST MUSIC REQUEST</label>

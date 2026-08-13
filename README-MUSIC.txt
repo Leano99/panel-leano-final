@@ -17,3 +17,6 @@ Catatan:
 - Player meminta kualitas tiny/144p jika tersedia.
 - Autoplay audio dapat dibatasi browser; di OBS Browser Source aktifkan Control audio via OBS.
 - Penggunaan musik YouTube dalam livestream tetap tunduk pada hak cipta/Content ID.
+
+
+VOLUME: atur VOLUME MUSIK CHROME di tab Music Request pada control panel. Atur VOLUME GOOGLE TTS di tab Text-to-Speech.

@@ -66,7 +66,8 @@
   // comments overlay url
   const commentsUrl = location.origin + '/overlay-comments.html?v=27';
   document.getElementById('commentsUrl').textContent = commentsUrl;
-  const musicUrl = location.origin + '/overlay-music.html?v=27';
+  const musicUrl = location.origin + '/overlay-music.html?v=31';
+  const musicPlayerUrl = location.origin + '/music-player.html?v=31';
   document.getElementById('musicUrl').textContent = musicUrl;
   function copyCommentsUrl(){
     navigator.clipboard.writeText(commentsUrl);
@@ -214,6 +215,7 @@
       voiceName: document.getElementById('ttsVoice').value,
       rate: Number(document.getElementById('ttsRate').value),
       pitch: Number(document.getElementById('ttsPitch').value),
+      volume: Number(document.getElementById('ttsVolume').value) / 100,
     };
   }
 
@@ -221,6 +223,7 @@
     const settings = currentTtsSettings();
     document.getElementById('ttsRateValue').textContent = settings.rate.toFixed(2) + 'x';
     document.getElementById('ttsPitchValue').textContent = settings.pitch.toFixed(2);
+    document.getElementById('ttsVolumeValue').textContent = Math.round(settings.volume * 100) + '%';
     socket.emit('tts:settings', settings);
     logEvent(`TTS: komentar ${settings.readComments ? 'ON' : 'OFF'}, like ${settings.readLikes ? 'ON' : 'OFF'}, follow ${settings.readFollows ? 'ON' : 'OFF'}, gift ${settings.readGifts ? 'ON' : 'OFF'}, suara ${settings.voiceName || 'otomatis'}`);
   }
@@ -234,8 +237,10 @@
     document.getElementById('ttsVoice').value = settings.voiceName || '';
     document.getElementById('ttsRate').value = settings.rate || 1;
     document.getElementById('ttsPitch').value = settings.pitch || 1;
+    document.getElementById('ttsVolume').value = Math.round((settings.volume == null ? 1 : settings.volume) * 100);
     document.getElementById('ttsRateValue').textContent = Number(settings.rate || 1).toFixed(2) + 'x';
     document.getElementById('ttsPitchValue').textContent = Number(settings.pitch || 1).toFixed(2);
+    document.getElementById('ttsVolumeValue').textContent = Math.round((settings.volume == null ? 1 : settings.volume) * 100) + '%';
   });
 
   // ---- TTS manual/live ----
@@ -294,7 +299,7 @@
     const u = new SpeechSynthesisUtterance('TTS live aktif.');
     const v = selectedVoice();
     if(v){ u.voice=v; u.lang=v.lang || 'id-ID'; } else u.lang='id-ID';
-    u.volume=1; u.rate=1; u.pitch=1;
+    u.volume=Number(document.getElementById('ttsVolume').value)/100 || 0; u.rate=1; u.pitch=1;
     u.onend=()=>{ document.getElementById('ttsDiagnostic').textContent='TTS Live AKTIF. Komentar akan dibaca dari panel ini tanpa username.'; };
     u.onerror=(e)=>{ document.getElementById('ttsDiagnostic').textContent='TTS aktif, tetapi browser menolak suara. Klik "Tes Suara Terpilih" sekali; jika itu juga diam, cek volume/tab mute dan izin audio browser.'; };
     // Give the browser a moment after resume so the utterance is not lost.
@@ -320,7 +325,7 @@
     if(v){ u.voice=v; u.lang=v.lang || 'id-ID'; } else u.lang='id-ID';
     u.rate=Number(document.getElementById('ttsRate').value)||1;
     u.pitch=Number(document.getElementById('ttsPitch').value)||1;
-    u.volume=1;
+    u.volume=Number(document.getElementById('ttsVolume').value)/100 || 0;
     u.onerror=(e)=>{ document.getElementById('ttsDiagnostic').textContent='Tes TTS gagal: '+(e.error||'browser menolak audio'); };
     try { speechSynthesis.speak(u); } catch(e) { document.getElementById('ttsDiagnostic').textContent='Tes TTS gagal: '+(e.message||e); }
   }
@@ -341,7 +346,7 @@
     if(v){u.voice=v;u.lang=v.lang||'id-ID';} else u.lang='id-ID';
     u.rate=Number(document.getElementById('ttsRate').value)||1;
     u.pitch=Number(document.getElementById('ttsPitch').value)||1;
-    u.volume=1;
+    u.volume=Number(document.getElementById('ttsVolume').value)/100 || 0;
     liveTtsBusy=true;
     const done=()=>{ if(!liveTtsBusy)return; liveTtsBusy=false; setTimeout(pumpLiveTts,100); };
     u.onend=done;
@@ -564,7 +569,8 @@
   });
 
   // ---- Music Request ----
-  function copyMusicUrl(){ navigator.clipboard?.writeText(document.getElementById('musicUrl').textContent); logEvent('URL Music Request disalin.'); }
+  function copyMusicUrl(){ navigator.clipboard?.writeText(document.getElementById('musicUrl').textContent); logEvent('URL OBS Music Request (visual only) disalin.'); }
+  function copyMusicPlayerUrl(){ navigator.clipboard?.writeText(document.getElementById('musicPlayerUrl').textContent); logEvent('URL Chrome Music Player disalin.'); }
   function renderMusic(state){
     state=state||{}; const c=state.current; const q=Array.isArray(state.queue)?state.queue:[];
     document.getElementById('musicCurrentTitle').textContent=c?.title||'Belum ada lagu';
@@ -576,6 +582,14 @@
   socket.on('music:update',renderMusic);
   socket.on('music:request-result',r=>{ logEvent(r?.ok?`Music request masuk: ${r.item?.title||'Lagu'}`:`Music request gagal: ${r?.message||'error'}`); });
   socket.on('event',p=>{ if(p?.kind==='music-request') logEvent(`🎵 @${p.username||'Penonton'} request: ${p.extra||''}`); if(p?.kind==='music-request-error') logEvent(`🎵 Request ditolak @${p.username||'Penonton'}: ${p.extra||''}`); });
+  function updateMusicVolume(){
+    const el=document.getElementById('musicVolume');
+    const volume=Math.max(0,Math.min(100,Number(el.value)||0));
+    document.getElementById('musicVolumeValue').textContent=volume+'%';
+    socket.emit('music:settings',{volume:volume/100});
+    logEvent('Volume musik Chrome: '+volume+'%');
+  }
+
   function musicSkip(){socket.emit('music:skip');logEvent('Music: skip.');}
   function musicClear(){socket.emit('music:clear');logEvent('Music: queue dihapus.');}
   function musicStop(){socket.emit('music:stop');logEvent('Music: stop dan queue dihapus.');}
@@ -584,7 +598,8 @@
   // ---- Simulator ----
   function simulateTtsComment(){const username=document.getElementById('simUsername').value||'PenontonDemo';const comment=document.getElementById('simComment').value||'halo, tes TTS!';socket.emit('trigger',{kind:'alert',type:'comment',username,extra:comment});logEvent('Tes Chat + TTS dikirim ke Browser Source ALERT + TTS. Pastikan audio Browser Source tidak di-mute.');}
   function cp(id){navigator.clipboard?.writeText(document.getElementById(id).textContent);logEvent('URL Browser Source disalin.');}
-  const baseUrl=location.origin;setTimeout(()=>{document.getElementById('srcChat').textContent=baseUrl+'/overlay-comments.html?v=27';document.getElementById('srcFollowGift').textContent=baseUrl+'/overlay-follow-gift.html?v=27';document.getElementById('srcGoal').textContent=baseUrl+'/overlay-goal.html?v=27';document.getElementById('srcAlert').textContent=baseUrl+'/overlay.html?v=27';document.getElementById('srcTts').textContent=baseUrl+'/overlay-tts.html?v=27';document.getElementById('musicUrl').textContent=baseUrl+'/overlay-music.html?v=27';},0);
+  const baseUrl=location.origin;setTimeout(()=>{document.getElementById('srcChat').textContent=baseUrl+'/overlay-comments.html?v=27';document.getElementById('srcFollowGift').textContent=baseUrl+'/overlay-follow-gift.html?v=27';document.getElementById('srcGoal').textContent=baseUrl+'/overlay-goal.html?v=27';document.getElementById('srcAlert').textContent=baseUrl+'/overlay.html?v=27';document.getElementById('srcTts').textContent=baseUrl+'/overlay-tts.html?v=27';document.getElementById('musicUrl').textContent=baseUrl+'/overlay-music.html?v=31';
+    if(document.getElementById('musicPlayerUrl')) document.getElementById('musicPlayerUrl').textContent=baseUrl+'/music-player.html?v=31';},0);
 
   function simulateEvent(type){
     const username = document.getElementById('simUsername').value || 'PenontonDemo';

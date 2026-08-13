@@ -26,6 +26,7 @@ let ttsSettings = {
   voiceName: "",
   rate: 1,
   pitch: 1,
+  volume: 1,
 };
 
 let overlaySettings = {
@@ -74,6 +75,7 @@ let musicQueue = [];
 let musicCurrent = null;
 let musicRequestCooldown = new Map();
 let musicSearchBusy = false;
+let musicSettings = { volume: 0.75 };
 
 function musicState() {
   return {
@@ -81,6 +83,7 @@ function musicState() {
     queue: musicQueue.slice(),
     queueCount: musicQueue.length,
     maxQueue: MUSIC_MAX_QUEUE,
+    volume: musicSettings.volume,
   };
 }
 
@@ -219,6 +222,7 @@ io.on("connection", (socket) => {
   socket.emit("overlay:settings", overlaySettings);
   socket.emit("comments:history", recentComments.slice(-MAX_RECENT_COMMENTS));
   socket.emit("music:update", musicState());
+  socket.emit("music:settings", musicSettings);
 
   socket.on("tts:settings", (payload = {}) => {
     ttsSettings = {
@@ -229,6 +233,7 @@ io.on("connection", (socket) => {
       voiceName: typeof payload.voiceName === "string" ? payload.voiceName : "",
       rate: Math.min(2, Math.max(0.5, Number(payload.rate) || 1)),
       pitch: Math.min(2, Math.max(0, Number(payload.pitch) || 1)),
+      volume: Math.min(1, Math.max(0, Number(payload.volume) || 1)),
     };
     io.emit("tts:settings", ttsSettings);
   });
@@ -258,6 +263,14 @@ io.on("connection", (socket) => {
     };
     io.emit("overlay:settings", overlaySettings);
   });
+
+  socket.on("music:settings", (payload = {}) => {
+    musicSettings = { volume: Math.min(1, Math.max(0, Number(payload.volume) || 0)) };
+    io.emit("music:settings", musicSettings);
+    io.emit("music:update", musicState());
+  });
+
+  socket.on("music:settings:get", () => socket.emit("music:settings", musicSettings));
 
   socket.on("music:request", async ({ username, query } = {}) => {
     const result = await addMusicRequest(username, query);
