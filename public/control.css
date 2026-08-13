@@ -802,21 +802,28 @@ header.deck{display:none!important}
 @media(max-width:700px){.v38-icon-btn{display:none}}
 
 
+/* === FINAL SCROLL FIX (SIDEBAR + MAIN CONTENT) === */
 
-/* === FIX SCROLL SIDEBAR === */
+/* reset body */
 body {
-  overflow: hidden;
+  margin: 0;
 }
 
+/* sidebar scroll */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+
   overflow-y: auto !important;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  height: 100vh;
 }
 
-/* adjust main content (common class guesses) */
+/* main content scroll */
 .main-content, .content, .app, .app-content {
+  margin-left: 260px;
   height: 100vh;
   overflow-y: auto;
 }
