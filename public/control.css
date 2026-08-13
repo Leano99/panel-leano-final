@@ -214,7 +214,11 @@
     background:linear-gradient(180deg,#18161b 0%,#141217 100%);
     border-right:1px solid #29252c;
     box-shadow:12px 0 30px rgba(0,0,0,.12);
+    overflow-y:auto; overflow-x:hidden;
+    scrollbar-width:thin; scrollbar-color:#3b343e transparent;
   }
+  .sidebar::-webkit-scrollbar{ width:6px; }
+  .sidebar::-webkit-scrollbar-thumb{ background:#3b343e; border-radius:999px; }
   .side-brand{ display:flex; align-items:center; gap:12px; padding:4px 8px 22px; border-bottom:1px solid #2a262d; }
   .side-logo{ width:42px; height:42px; border-radius:12px; display:grid; place-items:center; font-weight:900; color:#fff; background:linear-gradient(135deg,#ff7a22,#8b62ff); box-shadow:0 8px 20px rgba(255,122,34,.18); }
   .side-title{ font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:800; letter-spacing:-.4px; }
