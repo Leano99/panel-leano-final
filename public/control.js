@@ -569,6 +569,76 @@
   });
 
   // ---- Music Request ----
+  // The control page itself is the Chrome music player. This avoids the old
+  // mistake where the user had to keep a second /music-player.html tab open.
+  let chromeMusicPlayer = null;
+  let chromeMusicApiReady = false;
+  let chromeMusicActivated = false;
+  let chromeMusicCurrentId = null;
+  let chromeMusicPending = null;
+  let chromeMusicVolume = 0.75;
+
+  function setChromeMusicStatus(text, ok=false){
+    const el=document.getElementById('musicBrowserStatus');
+    if(el){ el.textContent=text; el.style.color=ok ? '#39d98a' : ''; }
+  }
+  function loadChromeYouTubeApi(){
+    if(window.YT && window.YT.Player){
+      if(window.onYouTubeIframeAPIReady) window.onYouTubeIframeAPIReady();
+      return;
+    }
+    if(document.querySelector('script[data-leano-youtube-api]')) return;
+    const s=document.createElement('script');
+    s.src='https://www.youtube.com/iframe_api';
+    s.dataset.leanoYoutubeApi='1';
+    document.head.appendChild(s);
+  }
+  window.onYouTubeIframeAPIReady=function(){
+    if(chromeMusicApiReady) return;
+    chromeMusicApiReady=true;
+    chromeMusicPlayer=new YT.Player('controlMusicPlayer',{
+      width:'100%',height:'270',videoId:'',
+      playerVars:{autoplay:0,controls:1,rel:0,playsinline:1},
+      events:{
+        onReady:function(){
+          try{ chromeMusicPlayer.setVolume(Math.round(chromeMusicVolume*100)); }catch(e){}
+          if(chromeMusicPending && chromeMusicActivated) playChromeMusic(chromeMusicPending);
+        },
+        onStateChange:function(e){
+          if(e.data===YT.PlayerState.PLAYING) setChromeMusicStatus('🔊 Musik sedang bunyi dari Chrome',true);
+          if(e.data===YT.PlayerState.ENDED && chromeMusicCurrentId){
+            const id=chromeMusicCurrentId; chromeMusicCurrentId=null; socket.emit('music:ended',{videoId:id});
+          }
+        },
+        onError:function(){
+          setChromeMusicStatus('❌ YouTube gagal memainkan video ini');
+          if(chromeMusicCurrentId){ const id=chromeMusicCurrentId; chromeMusicCurrentId=null; socket.emit('music:ended',{videoId:id}); }
+        }
+      }
+    });
+  };
+  function activateChromeMusic(){
+    chromeMusicActivated=true;
+    const b=document.getElementById('musicActivateBtn');
+    if(b){ b.textContent='✅ Audio Chrome Aktif'; b.disabled=true; }
+    setChromeMusicStatus('Chrome music player aktif',true);
+    loadChromeYouTubeApi();
+    if(chromeMusicPending && chromeMusicApiReady) playChromeMusic(chromeMusicPending);
+  }
+  function playChromeMusic(item){
+    if(!chromeMusicActivated || !item || !item.videoId) return;
+    chromeMusicPending=item;
+    if(!chromeMusicApiReady || !chromeMusicPlayer){ loadChromeYouTubeApi(); return; }
+    if(chromeMusicCurrentId===item.videoId) return;
+    chromeMusicCurrentId=item.videoId;
+    setChromeMusicStatus('⏳ Memutar: '+(item.title||'Lagu'));
+    try{
+      chromeMusicPlayer.setVolume(Math.round(chromeMusicVolume*100));
+      chromeMusicPlayer.loadVideoById({videoId:item.videoId,startSeconds:0});
+      chromeMusicPlayer.playVideo();
+    }catch(e){ setChromeMusicStatus('❌ Gagal memulai audio Chrome'); }
+  }
+
   function copyMusicUrl(){ navigator.clipboard?.writeText(document.getElementById('musicUrl').textContent); logEvent('URL OBS Music Request (visual only) disalin.'); }
   function copyMusicPlayerUrl(){ navigator.clipboard?.writeText(document.getElementById('musicPlayerUrl').textContent); logEvent('URL Chrome Music Player disalin.'); }
   function renderMusic(state){
@@ -578,22 +648,29 @@
     document.getElementById('musicQueueCount').textContent=q.length;
     const root=document.getElementById('musicQueueList');
     root.innerHTML=q.length?q.map((x,i)=>`<div>${i+1}. <b>${escapeHtml(x.title||'Lagu')}</b> — @${escapeHtml(x.requestedBy||'Penonton')}</div>`).join(''):'<div>Belum ada antrian.</div>';
+    chromeMusicPending=c||null;
+    if(c && chromeMusicActivated) playChromeMusic(c);
+    if(!c && chromeMusicPlayer && chromeMusicApiReady){ try{chromeMusicPlayer.stopVideo();}catch(e){} chromeMusicCurrentId=null; }
   }
   socket.on('music:update',renderMusic);
+  socket.on('music:settings',s=>{ chromeMusicVolume=Math.max(0,Math.min(1,Number(s?.volume ?? 0.75))); const el=document.getElementById('musicVolume'); if(el) el.value=Math.round(chromeMusicVolume*100); const v=document.getElementById('musicVolumeValue'); if(v) v.textContent=Math.round(chromeMusicVolume*100)+'%'; if(chromeMusicPlayer&&chromeMusicApiReady){try{chromeMusicPlayer.setVolume(Math.round(chromeMusicVolume*100));}catch(e){}} });
+  loadChromeYouTubeApi();
   socket.on('music:request-result',r=>{ logEvent(r?.ok?`Music request masuk: ${r.item?.title||'Lagu'}`:`Music request gagal: ${r?.message||'error'}`); });
   socket.on('event',p=>{ if(p?.kind==='music-request') logEvent(`🎵 @${p.username||'Penonton'} request: ${p.extra||''}`); if(p?.kind==='music-request-error') logEvent(`🎵 Request ditolak @${p.username||'Penonton'}: ${p.extra||''}`); });
   function updateMusicVolume(){
     const el=document.getElementById('musicVolume');
     const volume=Math.max(0,Math.min(100,Number(el.value)||0));
+    chromeMusicVolume=volume/100;
     document.getElementById('musicVolumeValue').textContent=volume+'%';
-    socket.emit('music:settings',{volume:volume/100});
+    if(chromeMusicPlayer && chromeMusicApiReady){ try{chromeMusicPlayer.setVolume(volume);}catch(e){} }
+    socket.emit('music:settings',{volume:chromeMusicVolume});
     logEvent('Volume musik Chrome: '+volume+'%');
   }
 
   function musicSkip(){socket.emit('music:skip');logEvent('Music: skip.');}
   function musicClear(){socket.emit('music:clear');logEvent('Music: queue dihapus.');}
   function musicStop(){socket.emit('music:stop');logEvent('Music: stop dan queue dihapus.');}
-  function testMusicRequest(){const q=document.getElementById('musicTestQuery').value.trim();if(!q)return;socket.emit('music:request',{username:'PenontonDemo',query:q});}
+  function testMusicRequest(){const q=document.getElementById('musicTestQuery').value.trim();if(!q)return;if(!chromeMusicActivated) activateChromeMusic();socket.emit('music:request',{username:'PenontonDemo',query:q});}
 
   // ---- Simulator ----
   function simulateTtsComment(){const username=document.getElementById('simUsername').value||'PenontonDemo';const comment=document.getElementById('simComment').value||'halo, tes TTS!';socket.emit('trigger',{kind:'alert',type:'comment',username,extra:comment});logEvent('Tes Chat + TTS dikirim ke Browser Source ALERT + TTS. Pastikan audio Browser Source tidak di-mute.');}

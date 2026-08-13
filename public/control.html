@@ -447,11 +447,20 @@
         <p class="hint">Mengatur volume YouTube di halaman <b>CHROME: MUSIC PLAYER</b>. Ini tidak mengubah volume TTS.</p>
       </div>
       <div class="field" style="margin-top:16px;">
+        <label>🔊 PEMUTAR MUSIK DI CHROME</label>
+        <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap;">
+          <button class="btn" id="musicActivateBtn" type="button" onclick="activateChromeMusic()">▶ Aktifkan Audio Chrome</button>
+          <span id="musicBrowserStatus" class="voice-status">Belum diaktifkan</span>
+        </div>
+        <div id="controlMusicPlayer" style="width:min(480px,100%);height:270px;background:#000;border-radius:12px;overflow:hidden;margin-top:12px;"></div>
+        <p class="hint">Musik diputar oleh halaman Chrome ini. OBS hanya mengambil audio Chrome jika kamu menambahkan <b>Application Audio Capture</b>. Tidak perlu membuka halaman Music Player terpisah.</p>
+      </div>
+      <div class="field" style="margin-top:16px;">
         <label>TEST MUSIC REQUEST</label>
         <div class="row"><input id="musicTestQuery" type="text" placeholder="mis. Alan Walker Faded" style="flex:1"><button class="btn" onclick="testMusicRequest()">🎵 Request Test</button></div>
       </div>
       <div id="musicQueueList" class="log" style="max-height:240px;margin-top:14px;"></div>
-      <p class="hint">Catatan: kualitas video meminta mode <b>tiny/144p</b> bila YouTube menyediakan level tersebut. YouTube tetap dapat memilih kualitas adaptif sendiri. Untuk autoplay audio, Browser Source OBS sebaiknya mengaktifkan <b>Control audio via OBS</b>.</p>
+      <p class="hint">Catatan: kualitas video meminta mode <b>tiny/144p</b> bila YouTube menyediakan level tersebut. YouTube tetap dapat memilih kualitas adaptif sendiri. Untuk musik: biarkan audio berasal dari Chrome. Jangan mengaktifkan audio dari Browser Source OBS untuk musik.</p>
     </div>
   </section>
 
