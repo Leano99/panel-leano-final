@@ -64,9 +64,7 @@ const MAX_RECENT_COMMENTS = 40;
 let liveSessionId = 0;
 let manualLikeLeaderboard = {};
 const MAX_LEADERBOARD = 5;
-const LEADERBOARD_REFRESH_MS = 15000;
-let manualLeaderboardTimer = null;
-let manualLeaderboardPending = null;
+let likeLeaderboard = {};
 
 // Music request queue (YouTube). Requests are created from LIVE comments using !song.
 const MUSIC_MAX_QUEUE = 10;
@@ -286,6 +284,7 @@ io.on("connection", (socket) => {
     // Reset live counters/leaderboard when switching to a new account.
     streamStats = { comments: 0, likes: 0, follows: 0, gifts: 0, giftCoins: 0, startedAt: null, lastEventAt: null };
     manualLikeLeaderboard = {};
+    likeLeaderboard = {};
     musicQueue = [];
     musicCurrent = null;
     musicRequestCooldown.clear();
@@ -358,21 +357,13 @@ function processEvent(payload = {}, meta = {}) {
   if (payload.kind === "like-sim") {
     const username = String(payload.username || "PenontonDemo");
     const count = Math.max(1, Number(payload.count) || 1);
-    manualLikeLeaderboard[username] = (manualLikeLeaderboard[username] || 0) + count;
-    const top = Object.entries(manualLikeLeaderboard)
+    likeLeaderboard[username] = (likeLeaderboard[username] || 0) + count;
+    manualLikeLeaderboard[username] = likeLeaderboard[username];
+    const top = Object.entries(likeLeaderboard)
       .sort((a,b) => b[1] - a[1])
       .slice(0, MAX_LEADERBOARD)
       .map(([name, likes]) => ({ username: name, likes }));
-    manualLeaderboardPending = top;
-    if (!manualLeaderboardTimer) {
-      manualLeaderboardTimer = setTimeout(() => {
-        manualLeaderboardTimer = null;
-        if (manualLeaderboardPending) {
-          io.emit("event", { kind: "leaderboard", top: manualLeaderboardPending });
-          manualLeaderboardPending = null;
-        }
-      }, LEADERBOARD_REFRESH_MS);
-    }
+    io.emit("event", { kind: "leaderboard", top });
     // Also count the simulated likes for stats/goal.
     if (!streamStats.startedAt) streamStats.startedAt = Date.now();
     streamStats.lastEventAt = Date.now();
@@ -384,9 +375,7 @@ function processEvent(payload = {}, meta = {}) {
 
   if (payload.kind === "leaderboard-reset") {
     manualLikeLeaderboard = {};
-    if (manualLeaderboardTimer) clearTimeout(manualLeaderboardTimer);
-    manualLeaderboardTimer = null;
-    manualLeaderboardPending = null;
+    likeLeaderboard = {};
     io.emit("event", { kind: "leaderboard", top: [] });
     return;
   }
@@ -418,7 +407,13 @@ function processEvent(payload = {}, meta = {}) {
         recentComments.splice(0, recentComments.length - MAX_RECENT_COMMENTS);
       }
     }
-    if (payload.type === "like") streamStats.likes += 1;
+    if (payload.type === "like") {
+      const count = Math.max(1, Number(payload.count) || 1);
+      likeLeaderboard[payload.username || "Penonton"] = (likeLeaderboard[payload.username || "Penonton"] || 0) + count;
+      streamStats.likes += count;
+      const top = Object.entries(likeLeaderboard).sort((a,b) => b[1] - a[1]).slice(0, MAX_LEADERBOARD).map(([username, likes]) => ({ username, likes }));
+      io.emit("event", { kind: "leaderboard", top });
+    }
     if (payload.type === "follow") streamStats.follows += 1;
     if (payload.type === "gift") streamStats.gifts += 1;
 

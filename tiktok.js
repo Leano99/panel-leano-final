@@ -9,9 +9,6 @@ let currentConnection = null;
 let currentUsername = null;
 let currentConnected = false;
 let acceptingLiveEvents = false;
-const LEADERBOARD_REFRESH_MS = 15000;
-let leaderboardTimer = null;
-let leaderboardDirty = false;
 
 function displayName(data) {
   // tiktok-live-connector v2+ (protobuf-based) nests user info under `data.user`.
@@ -40,26 +37,9 @@ function leaderboardTop(n = 5) {
 }
 
 function setupTiktok(io, processEvent) {
-  function broadcastLeaderboardNow() {
-    io.emit("event", { kind: "leaderboard", top: leaderboardTop() });
-  }
-
-  function broadcastLeaderboard() {
-    leaderboardDirty = true;
-    if (leaderboardTimer) return;
-    leaderboardTimer = setTimeout(() => {
-      leaderboardTimer = null;
-      if (!leaderboardDirty) return;
-      leaderboardDirty = false;
-      broadcastLeaderboardNow();
-    }, LEADERBOARD_REFRESH_MS);
-  }
-
-  function resetLeaderboardBroadcast() {
-    if (leaderboardTimer) clearTimeout(leaderboardTimer);
-    leaderboardTimer = null;
-    leaderboardDirty = false;
-  }
+  function broadcastLeaderboardNow() {}
+  function broadcastLeaderboard() {}
+  function resetLeaderboardBroadcast() {}
 
   function connect(username, signApiKey) {
     return new Promise((resolve, reject) => {
