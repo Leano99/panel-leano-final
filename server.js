@@ -134,18 +134,11 @@ async function addMusicRequest(username, query) {
   const clean = String(query || "").trim().slice(0, 160);
   if (!clean) return { ok:false, message:"Judul lagu kosong." };
   if (musicQueue.length >= MUSIC_MAX_QUEUE && musicCurrent) return { ok:false, message:`Antrian penuh (maks ${MUSIC_MAX_QUEUE}).` };
-  const key = String(username || "Penonton").toLowerCase();
-  const now = Date.now();
-  if ((musicRequestCooldown.get(key) || 0) > now) {
-    const sec = Math.ceil((musicRequestCooldown.get(key) - now) / 1000);
-    return { ok:false, message:`@${username}, tunggu ${sec} detik sebelum request lagi.` };
-  }
   if (musicSearchBusy) return { ok:false, message:"Bot sedang mencari request lain, coba lagi sebentar." };
   musicSearchBusy = true;
   try {
     const found = await searchYouTube(clean);
     const item = { ...found, requestedBy: String(username || "Penonton"), query: clean, id: `${found.videoId}-${Date.now()}` };
-    musicRequestCooldown.set(key, now + MUSIC_COOLDOWN_MS);
     if (!musicCurrent) {
       musicCurrent = item;
     } else {
